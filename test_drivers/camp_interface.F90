@@ -4,30 +4,30 @@
 !> An interface between MAM4 and the CAMP
 module mam4_camp_interface
 #ifdef MAM4_USE_CAMP
-  use shr_kind_mod, only: r8 => shr_kind_r8
-  use mam4_state
-  use camp_camp_core
-  use camp_camp_state
-  use camp_chem_spec_data
-  use camp_aero_rep_data
-  use camp_aero_rep_modal_binned_mass
-  use camp_constants
-  use camp_util
-  use json_module
-  use camp_solver_stats
-  use camp_mechanism_data
-  use camp_rxn_data
-  use camp_rxn_emission
-  use camp_rxn_photolysis
+    use shr_kind_mod, only: r8 => shr_kind_r8
+    use mam4_state
+    use camp_camp_core
+    use camp_camp_state
+    use camp_chem_spec_data
+    use camp_aero_rep_data
+    use camp_aero_rep_modal_binned_mass
+    use camp_constants
+    use camp_util
+    use json_module
+    use camp_solver_stats
+    use camp_mechanism_data
+    use camp_rxn_data
+    use camp_rxn_emission
+    use camp_rxn_photolysis
 
-  implicit none
+    implicit none
 
 contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  !> Run the CAMP module for the current MAM4 state
-  subroutine mam4_camp_interface_solve( env_state, aero_state, gas_state, del_t)
+    !> Run the CAMP module for the current MAM4 state
+    subroutine mam4_camp_interface_solve( env_state, aero_state, gas_state, del_t)
 
     !> CAMP core
     type(camp_core_t), pointer :: camp_core
@@ -44,9 +44,9 @@ contains
     integer :: n, i, i_ic
     character(len=4), parameter :: aero_rep_key = "MAM4"
     character(len=16), parameter :: mode_names(4) = (/ "accumulation    ", &
-                                                       "aitken          ", &
-                                                       "coarse          ", &
-                                                       "primary_carbon  " /)
+                                                        "aitken          ", &
+                                                        "coarse          ", &
+                                                        "primary_carbon  " /)
     real(kind=r8), parameter :: pi = 3.14159265358979323846_r8
     character(len=255), allocatable :: ic_spec(:)
     character(len=255), allocatable :: aero_ic_names(:)
@@ -72,7 +72,7 @@ contains
 
     type(solver_stats_t), target :: solver_stats
 
-    camp_core => camp_core_t("/home/dquevedo/AMBRS/ambrs_mam4_cb6r5_ae7_aq/tests/mam4_config.json")
+    camp_core => camp_core_t("/Users/duncancq/Research/AMBRS/ambrs/test/camp_cb6/mam4_config.json")
     call camp_core%initialize()
 
     !> Count emission and photolysis reactions
@@ -83,15 +83,15 @@ contains
     do i = 1, mechanism%size()
         rxn => mechanism%get_rxn(i)
         select type (rxn)
-          class is (rxn_photolysis_t)
+            class is (rxn_photolysis_t)
             n_phot = n_phot + 1
-          class is (rxn_emission_t)
+            class is (rxn_emission_t)
             n_emis = n_emis + 1
         end select
     end do
 
-    if (n_emis .ge. 0) allocate(q_update(n_emis), i_q(n_emis))
-    if (n_phot .ge. 0) allocate(j_update(n_phot), i_j(n_phot))
+    if (n_emis .gt. 0) allocate(q_update(n_emis), i_q(n_emis))
+    if (n_phot .gt. 0) allocate(j_update(n_phot), i_j(n_phot))
 
     !> Initialize emission and photolysis update objects
     i_emis = 0
@@ -99,21 +99,21 @@ contains
     do i = 1, mechanism%size()
         rxn => mechanism%get_rxn(i)
         select type (rxn)
-          class is (rxn_photolysis_t)
-            i_phot = i_phot + 1
-            i_j(i_phot) = i
-            call camp_core%initialize_update_object(rxn, j_update(i_phot))
-          class is (rxn_emission_t)
-            i_emis = i_emis + 1
-            i_q(i_emis) = i
-            call camp_core%initialize_update_object(rxn, q_update(i_emis))
+            class is (rxn_photolysis_t)
+                i_phot = i_phot + 1
+                i_j(i_phot) = i
+                call camp_core%initialize_update_object(rxn, j_update(i_phot))
+            class is (rxn_emission_t)
+                i_emis = i_emis + 1
+                i_q(i_emis) = i
+                call camp_core%initialize_update_object(rxn, q_update(i_emis))
         end select
     end do
 
     !> Read emission rates
-    if (n_emis .ge. 0) then
+    if (n_emis .gt. 0) then
         allocate(q(n_emis))
-        open(1, file = '/home/dquevedo/AMBRS/ambrs_mam4_cb6r5_ae7_aq/tests/emis_q.dat', status='old')
+        open(1, file = '/Users/duncancq/Research/AMBRS/ambrs/test/camp_cb6/emis_q.dat', status='old')
         do i_emis = 1, n_emis
             read(1, *) dummy, q(i_emis)
         end do
@@ -134,7 +134,7 @@ contains
     !> Read photolysis rates
     if (n_phot .gt. 0) then
         allocate(j(n_phot))
-        !open(2, file = '/home/dquevedo/AMBRS/ambrs_mam4_cb6r5_ae7_aq/tests/phot_j.dat', status='old')
+        !open(2, file = '/Users/duncancq/Research/AMBRS/ambrs/test/camp_cb6/phot_j.dat', status='old')
         !do i_phot = 1, n_phot
             !read(2, *) dummy, j(i_phot)
         !end do
@@ -160,17 +160,17 @@ contains
     !> Initialize modal aero update objects and solver; update rates
     call assert(209301925, camp_core%get_aero_rep(aero_rep_key, aero_rep_ptr))
     select type (aero_rep_ptr)
-          type is (aero_rep_modal_binned_mass_t)
+            type is (aero_rep_modal_binned_mass_t)
             call camp_core%initialize_update_object(aero_rep_ptr, &
-                                                     update_data_GMD)
+                                                        update_data_GMD)
             call camp_core%initialize_update_object(aero_rep_ptr, &
-                                                     update_data_GSD)
+                                                        update_data_GSD)
             call camp_core%solver_initialize()
             camp_state => camp_core%new_state()
             do n = 1, 4
                 call assert_msg(431201141, &
-                      aero_rep_ptr%get_section_id(mode_names(n), mode(n)), &
-                      "Could not get mode ID")
+                        aero_rep_ptr%get_section_id(mode_names(n), mode(n)), &
+                        "Could not get mode ID")
                 call update_data_GMD%set_GMD(mode(n), aero_state%GMD(n))
                 call update_data_GSD%set_GSD(mode(n), aero_state%GSD(n))
                 call camp_core%update_data(update_data_GMD)
@@ -201,7 +201,7 @@ contains
     call env_state_set_camp_env_state(env_state, camp_state)
 
     allocate( mech_names(chem_spec_data%size()), &
-              aero_names( size( aero_rep_ptr%unique_names() ) ) )
+                aero_names( size( aero_rep_ptr%unique_names() ) ) )
 
     if ( first_step ) then
     
@@ -210,14 +210,14 @@ contains
         camp_state%state_var = 0.0_r8
         
         allocate( persistent_state(size(camp_state%state_var)), &
-                  ic_spec(chem_spec_data%size()), &
-                  ic(chem_spec_data%size()) )
+                    ic_spec(chem_spec_data%size()), &
+                    ic(chem_spec_data%size()) )
 
         persistent_state = 0.0_r8
 
         !> Load initial gas concentrations
         mech_names = chem_spec_data%get_spec_names()
-        open(3, file = '/home/dquevedo/AMBRS/ambrs_mam4_cb6r5_ae7_aq/tests/ic_sulfate_condensation.dat', status='old')
+        open(3, file = '/Users/duncancq/Research/AMBRS/ambrs/test/camp_cb6/ic_sulfate_condensation.dat', status='old')
         do i_ic = 1, size(mech_names)
             read(3, *) ic_spec(i_ic), ic(i_ic)
             if (chem_spec_data%gas_state_id( trim( ic_spec(i_ic)) ) .gt. 0) then
@@ -296,7 +296,7 @@ contains
     end if
 
     call mam4_camp_interface_get_camp_aerosol(aero_state, &
-                                          camp_core, camp_state, aero_rep_ptr)
+                                            camp_core, camp_state, aero_rep_ptr)
 
     ! Update the MAM4 gas-phase state
     call gas_state_get_camp_conc(gas_state, camp_state, camp_core)
@@ -309,13 +309,13 @@ contains
     if ( n_emis .gt. 0 ) deallocate( q_update, q, i_q )
     deallocate( mech_names, aero_names )
 
-  end subroutine mam4_camp_interface_solve
+    end subroutine mam4_camp_interface_solve
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  !> Set the CAMP aerosol-phase species and mass concentrations
-  subroutine mam4_camp_interface_set_camp_aerosol(aero_state, &
-      camp_core, camp_state, aero_rep_data)
+    !> Set the CAMP aerosol-phase species and mass concentrations
+    subroutine mam4_camp_interface_set_camp_aerosol(aero_state, &
+        camp_core, camp_state, aero_rep_data)
 
     !> Aerosol state.
     type(aero_state_t), intent(inout) :: aero_state
@@ -365,14 +365,14 @@ contains
 
     deallocate(names)
 
-  end subroutine mam4_camp_interface_set_camp_aerosol
+    end subroutine mam4_camp_interface_set_camp_aerosol
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  !> Get the CAMP aerosol-phase species and mass concentrations
-  subroutine mam4_camp_interface_get_camp_aerosol(aero_state, &
-      camp_core, camp_state, aero_rep_data)
-      
+    !> Get the CAMP aerosol-phase species and mass concentrations
+    subroutine mam4_camp_interface_get_camp_aerosol(aero_state, &
+        camp_core, camp_state, aero_rep_data)
+        
     !> Aerosol state.
     type(aero_state_t), intent(inout) :: aero_state
     !> CAMP core.
@@ -421,25 +421,26 @@ contains
     
     deallocate(names)
 
-  end subroutine mam4_camp_interface_get_camp_aerosol
+    end subroutine mam4_camp_interface_get_camp_aerosol
 
-  character(len=16) function mode_extract(str, sep)
-      !> Read mode name from CAMP unique aerosol
-      !> name pattern.
+    character(len=16) function mode_extract(str, sep)
+        !> Read mode name from CAMP unique aerosol
+        !> name pattern.
 
-      character(len=*) :: str, sep
-      integer :: i, char_count
+        character(len=*) :: str, sep
+        integer :: i, char_count
 
-      char_count = 0
-      do i = 1, len(str)
-          if (str(i:i) .eq. sep) exit
-          char_count = char_count + 1
-      end do
+        char_count = 0
+        do i = 1, len(str)
+            if (str(i:i) .eq. sep) exit
+            char_count = char_count + 1
+        end do
 
-      mode_extract = str(1:char_count)
+        mode_extract = str(1:char_count)
 
-  end function mode_extract
+    end function mode_extract
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #endif
 end module mam4_camp_interface
+    

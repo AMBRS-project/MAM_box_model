@@ -12,7 +12,7 @@
 !
 !-------------------------------------------------------------------------------
 
-      module driver
+module driver
 
       use shr_kind_mod, only: r8 => shr_kind_r8
       use abortutils, only: endrun
@@ -58,8 +58,8 @@
       use physics_buffer, only: physics_buffer_desc
 
       use modal_aero_data, only: &
-         lmassptrcw_amode, nspec_amode, numptrcw_amode, &
-         qqcw_get_field
+            lmassptrcw_amode, nspec_amode, numptrcw_amode, &
+            qqcw_get_field
 
 
       integer, parameter :: ncolxx = min( pcols, 10 )
@@ -90,7 +90,6 @@
       type(aero_state_t) :: aero_state_for_camp
 #endif
 
-
       ncol = ncolxx
       ncol_for_outfld = ncol
       ncol_for_qsat = ncol
@@ -105,22 +104,28 @@
 
       iulog = 92
       write(*,'(/a)') '*** main calling cambox_init_run'
+#ifdef MAM4_USE_CAMP
       call cambox_init_run( &
-         ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
-         q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, env_state_for_camp, &
-         aero_state_for_camp )
+            ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
+            q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, env_state_for_camp, &
+            aero_state_for_camp )
+#else
+      call cambox_init_run( &
+            ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
+            q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
+#endif
 
       iulog = 93
       write(*,'(/a)') '*** main calling cambox_do_run'
 #ifdef MAM4_USE_CAMP
       call cambox_do_run( &
-         ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
-         q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, pbuf2d, &
-         env_state_for_camp, aero_state_for_camp )
+            ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
+            q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, pbuf2d, &
+            env_state_for_camp, aero_state_for_camp )
 #else
       call cambox_do_run( &
-         ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
-         q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, pbuf2d )
+            ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
+            q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, pbuf2d )
 #endif
 
       end subroutine cambox_main
@@ -179,36 +184,36 @@
 #if ( defined MOSAIC_SPECIES )
       solsym(:l) = &
       (/ 'H2O2    ','H2SO4   ','SO2     ','DMS     ','NH3     ', &
-         'SOAG    ','HNO3    ','HCL     ',                       &
-         'so4_a1  ','nh4_a1  ','pom_a1  ','soa_a1  ','bc_a1   ', &
-         'ncl_a1  ','no3_a1  ','cl_a1   ','num_a1  ',            &
-         'so4_a2  ','nh4_a2  ','soa_a2  ','ncl_a2  ','no3_a2  ', &
-         'cl_a2   ','num_a2  ',                                  &
-         'pom_a3  ','bc_a3   ','num_a3  ',                       &
-         'ncl_a4  ','so4_a4  ','nh4_a4  ','no3_a4  ','cl_a4   ', &
-         'num_a4  ',                                             &
-         'dst_a5  ','so4_a5  ','nh4_a5  ','no3_a5  ','cl_a5   ', &
-         'ca_a5   ','co3_a5  ','num_a5  ',                       &
-         'ncl_a6  ','so4_a6  ','nh4_a6  ','no3_a6  ','cl_a6   ', &
-         'num_a6  ',                                             &
-         'dst_a7  ','so4_a7  ','nh4_a7  ','no3_a7  ','cl_a7   ', &
-         'ca_a7   ','co3_a7  ','num_a7  '                        /)
+            'SOAG    ','HNO3    ','HCL     ',                       &
+            'so4_a1  ','nh4_a1  ','pom_a1  ','soa_a1  ','bc_a1   ', &
+            'ncl_a1  ','no3_a1  ','cl_a1   ','num_a1  ',            &
+            'so4_a2  ','nh4_a2  ','soa_a2  ','ncl_a2  ','no3_a2  ', &
+            'cl_a2   ','num_a2  ',                                  &
+            'pom_a3  ','bc_a3   ','num_a3  ',                       &
+            'ncl_a4  ','so4_a4  ','nh4_a4  ','no3_a4  ','cl_a4   ', &
+            'num_a4  ',                                             &
+            'dst_a5  ','so4_a5  ','nh4_a5  ','no3_a5  ','cl_a5   ', &
+            'ca_a5   ','co3_a5  ','num_a5  ',                       &
+            'ncl_a6  ','so4_a6  ','nh4_a6  ','no3_a6  ','cl_a6   ', &
+            'num_a6  ',                                             &
+            'dst_a7  ','so4_a7  ','nh4_a7  ','no3_a7  ','cl_a7   ', &
+            'ca_a7   ','co3_a7  ','num_a7  '                        /)
       adv_mass(:l) = &
       (/ 34.0135994_r8, 98.0783997_r8, 64.0647964_r8, 62.1324005_r8, 17.0289402_r8, &
-         12.0109997_r8, 63.0123400_r8, 36.4601000_r8,                               &
-         96.0635986_r8, 18.0363407_r8, 12.0109997_r8, 12.0109997_r8, 12.0109997_r8, &
-         22.9897667_r8, 62.0049400_r8, 35.4527000_r8, 1.00740004_r8,                &
-         96.0635986_r8, 18.0363407_r8, 12.0109997_r8, 22.9897667_r8, 62.0049400_r8, &
-         35.4527000_r8, 1.00740004_r8,                                              &
-         12.0109997_r8, 12.0109997_r8, 1.00740004_r8,                               &
-         22.9897667_r8, 96.0635986_r8, 18.0363407_r8, 62.0049400_r8, 35.4527000_r8, &
-         1.00740004_r8,                                                             &
-         135.064041_r8, 96.0635986_r8, 18.0363407_r8, 62.0049400_r8, 35.4527000_r8, &
-         40.0780000_r8, 60.0092000_r8, 1.00740004_r8,                               &
-         22.9897667_r8, 96.0635986_r8, 18.0363407_r8, 62.0049400_r8, 35.4527000_r8, &
-         1.00740004_r8,                                                             &
-         135.064041_r8, 96.0635986_r8, 18.0363407_r8, 62.0049400_r8, 35.4527000_r8, &
-         40.0780000_r8, 60.0092000_r8, 1.00740004_r8                                /)
+            12.0109997_r8, 63.0123400_r8, 36.4601000_r8,                               &
+            96.0635986_r8, 18.0363407_r8, 12.0109997_r8, 12.0109997_r8, 12.0109997_r8, &
+            22.9897667_r8, 62.0049400_r8, 35.4527000_r8, 1.00740004_r8,                &
+            96.0635986_r8, 18.0363407_r8, 12.0109997_r8, 22.9897667_r8, 62.0049400_r8, &
+            35.4527000_r8, 1.00740004_r8,                                              &
+            12.0109997_r8, 12.0109997_r8, 1.00740004_r8,                               &
+            22.9897667_r8, 96.0635986_r8, 18.0363407_r8, 62.0049400_r8, 35.4527000_r8, &
+            1.00740004_r8,                                                             &
+            135.064041_r8, 96.0635986_r8, 18.0363407_r8, 62.0049400_r8, 35.4527000_r8, &
+            40.0780000_r8, 60.0092000_r8, 1.00740004_r8,                               &
+            22.9897667_r8, 96.0635986_r8, 18.0363407_r8, 62.0049400_r8, 35.4527000_r8, &
+            1.00740004_r8,                                                             &
+            135.064041_r8, 96.0635986_r8, 18.0363407_r8, 62.0049400_r8, 35.4527000_r8, &
+            40.0780000_r8, 60.0092000_r8, 1.00740004_r8                                /)
 ! nacl  58.4424667
 ! cl    35.4527000
 ! na    22.9897667
@@ -222,22 +227,22 @@
 #else
       solsym(:l) = &
       (/ 'H2O2    ','H2SO4   ','SO2     ','DMS     ','NH3     ', &
-         'SOAG    ','so4_a1  ','nh4_a1  ','pom_a1  ','soa_a1  ', &
-         'bc_a1   ','ncl_a1  ','num_a1  ','so4_a2  ','nh4_a2  ', &
-         'soa_a2  ','ncl_a2  ','num_a2  ','pom_a3  ','bc_a3   ', &
-         'num_a3  ','ncl_a4  ','so4_a4  ','nh4_a4  ','num_a4  ', &
-         'dst_a5  ','so4_a5  ','nh4_a5  ','num_a5  ','ncl_a6  ', &
-         'so4_a6  ','nh4_a6  ','num_a6  ','dst_a7  ','so4_a7  ', &
-         'nh4_a7  ','num_a7  ' /)
+            'SOAG    ','so4_a1  ','nh4_a1  ','pom_a1  ','soa_a1  ', &
+            'bc_a1   ','ncl_a1  ','num_a1  ','so4_a2  ','nh4_a2  ', &
+            'soa_a2  ','ncl_a2  ','num_a2  ','pom_a3  ','bc_a3   ', &
+            'num_a3  ','ncl_a4  ','so4_a4  ','nh4_a4  ','num_a4  ', &
+            'dst_a5  ','so4_a5  ','nh4_a5  ','num_a5  ','ncl_a6  ', &
+            'so4_a6  ','nh4_a6  ','num_a6  ','dst_a7  ','so4_a7  ', &
+            'nh4_a7  ','num_a7  ' /)
       adv_mass(:l) = &
       (/ 34.0135994_r8, 98.0783997_r8, 64.0647964_r8, 62.1324005_r8, 17.0289402_r8, &
-         12.0109997_r8, 96.0635986_r8, 18.0363407_r8, 12.0109997_r8, 12.0109997_r8, &
-         12.0109997_r8, 58.4424667_r8, 1.00740004_r8, 96.0635986_r8, 18.0363407_r8, &
-         12.0109997_r8, 58.4424667_r8, 1.00740004_r8, 12.0109997_r8, 12.0109997_r8, &
-         1.00740004_r8, 58.4424667_r8, 96.0635986_r8, 18.0363407_r8, 1.00740004_r8, &
-         135.064041_r8, 96.0635986_r8, 18.0363407_r8, 1.00740004_r8, 58.4424667_r8, &
-         96.0635986_r8, 18.0363407_r8, 1.00740004_r8, 135.064041_r8, 96.0635986_r8, &
-         18.0363407_r8, 1.00740004_r8 /)
+            12.0109997_r8, 96.0635986_r8, 18.0363407_r8, 12.0109997_r8, 12.0109997_r8, &
+            12.0109997_r8, 58.4424667_r8, 1.00740004_r8, 96.0635986_r8, 18.0363407_r8, &
+            12.0109997_r8, 58.4424667_r8, 1.00740004_r8, 12.0109997_r8, 12.0109997_r8, &
+            1.00740004_r8, 58.4424667_r8, 96.0635986_r8, 18.0363407_r8, 1.00740004_r8, &
+            135.064041_r8, 96.0635986_r8, 18.0363407_r8, 1.00740004_r8, 58.4424667_r8, &
+            96.0635986_r8, 18.0363407_r8, 1.00740004_r8, 135.064041_r8, 96.0635986_r8, &
+            18.0363407_r8, 1.00740004_r8 /)
 
 #endif
 
@@ -247,28 +252,28 @@
 
       solsym(:l) = &
       (/ 'H2O2    ','H2SO4   ','SO2     ','DMS     ','NH3     ', &
-         'SOAG    ','so4_a1  ','nh4_a1  ','poma_a1 ', &
+            'SOAG    ','so4_a1  ','nh4_a1  ','poma_a1 ', &
                                           'pomb_a1 ','soa_a1  ', &
-         'bca_a1  ', &
-         'bcb_a1  ','ncl_a1  ','num_a1  ','so4_a2  ','nh4_a2  ', &
-         'soa_a2  ','ncl_a2  ','num_a2  ','poma_a3 ','pomb_a3 ', &
+            'bca_a1  ', &
+            'bcb_a1  ','ncl_a1  ','num_a1  ','so4_a2  ','nh4_a2  ', &
+            'soa_a2  ','ncl_a2  ','num_a2  ','poma_a3 ','pomb_a3 ', &
                                           'bca_a3  ','bcb_a3  ', &
-         'num_a3  ','ncl_a4  ','so4_a4  ','nh4_a4  ','num_a4  ', &
-         'dst_a5  ','so4_a5  ','nh4_a5  ','num_a5  ','ncl_a6  ', &
-         'so4_a6  ','nh4_a6  ','num_a6  ','dst_a7  ','so4_a7  ', &
-         'nh4_a7  ','num_a7  ' /)
+            'num_a3  ','ncl_a4  ','so4_a4  ','nh4_a4  ','num_a4  ', &
+            'dst_a5  ','so4_a5  ','nh4_a5  ','num_a5  ','ncl_a6  ', &
+            'so4_a6  ','nh4_a6  ','num_a6  ','dst_a7  ','so4_a7  ', &
+            'nh4_a7  ','num_a7  ' /)
       adv_mass(:l) = &
       (/ 34.0135994_r8, 98.0783997_r8, 64.0647964_r8, 62.1324005_r8, 17.0289402_r8, &
-         12.0109997_r8, 96.0635986_r8, 18.0363407_r8, 12.0109997_r8, 12.0109997_r8, 12.0109997_r8, &
-         12.0109997_r8, 12.0109997_r8, 58.4424667_r8, 1.00740004_r8, 96.0635986_r8, 18.0363407_r8, &
-         12.0109997_r8, 58.4424667_r8, 1.00740004_r8, 12.0109997_r8,12.0109997_r8,  12.0109997_r8, 12.0109997_r8, &
-         1.00740004_r8, 58.4424667_r8, 96.0635986_r8, 18.0363407_r8, 1.00740004_r8, &
-         135.064041_r8, 96.0635986_r8, 18.0363407_r8, 1.00740004_r8, 58.4424667_r8, &
-         96.0635986_r8, 18.0363407_r8, 1.00740004_r8, 135.064041_r8, 96.0635986_r8, &
-         18.0363407_r8, 1.00740004_r8 /)
+            12.0109997_r8, 96.0635986_r8, 18.0363407_r8, 12.0109997_r8, 12.0109997_r8, 12.0109997_r8, &
+            12.0109997_r8, 12.0109997_r8, 58.4424667_r8, 1.00740004_r8, 96.0635986_r8, 18.0363407_r8, &
+            12.0109997_r8, 58.4424667_r8, 1.00740004_r8, 12.0109997_r8,12.0109997_r8,  12.0109997_r8, 12.0109997_r8, &
+            1.00740004_r8, 58.4424667_r8, 96.0635986_r8, 18.0363407_r8, 1.00740004_r8, &
+            135.064041_r8, 96.0635986_r8, 18.0363407_r8, 1.00740004_r8, 58.4424667_r8, &
+            96.0635986_r8, 18.0363407_r8, 1.00740004_r8, 135.064041_r8, 96.0635986_r8, &
+            18.0363407_r8, 1.00740004_r8 /)
 
       else
-         call endrun( '*** bad nbc and/or npoa and/or nsoa' )
+            call endrun( '*** bad nbc and/or npoa and/or nsoa' )
       end if
 
 #elif ( defined MODAL_AERO_4MODE_MOM )
@@ -276,36 +281,36 @@
 #if ( defined RAIN_EVAP_TO_COARSE_AERO )
       solsym(:l) = &
       (/ 'H2O2          ', 'H2SO4         ', 'SO2           ', 'DMS           ', 'SOAG          ', &
-         'so4_a1        ', 'pom_a1        ', 'soa_a1        ', 'bc_a1         ', 'dst_a1        ', &
-         'ncl_a1        ', 'mom_a1        ', 'num_a1        ', 'so4_a2        ', 'soa_a2        ', &
-         'ncl_a2        ', 'mom_a2        ', 'num_a2        ', 'dst_a3        ', 'ncl_a3        ', &
-         'so4_a3        ', 'bc_a3         ', 'pom_a3        ', 'soa_a3        ', 'mom_a3        ', &
-         'num_a3        ', 'pom_a4        ', 'bc_a4         ', 'mom_a4        ', 'num_a4        ' /)
+            'so4_a1        ', 'pom_a1        ', 'soa_a1        ', 'bc_a1         ', 'dst_a1        ', &
+            'ncl_a1        ', 'mom_a1        ', 'num_a1        ', 'so4_a2        ', 'soa_a2        ', &
+            'ncl_a2        ', 'mom_a2        ', 'num_a2        ', 'dst_a3        ', 'ncl_a3        ', &
+            'so4_a3        ', 'bc_a3         ', 'pom_a3        ', 'soa_a3        ', 'mom_a3        ', &
+            'num_a3        ', 'pom_a4        ', 'bc_a4         ', 'mom_a4        ', 'num_a4        ' /)
       adv_mass(:l) = &
       (/     34.013600_r8,     98.078400_r8,     64.064800_r8,     62.132400_r8,     12.011000_r8, &
             115.107340_r8,     12.011000_r8,     12.011000_r8,     12.011000_r8,    135.064039_r8, &
-             58.442468_r8, 250092.672000_r8,      1.007400_r8,    115.107340_r8,     12.011000_r8, &
-             58.442468_r8, 250092.672000_r8,      1.007400_r8,    135.064039_r8,     58.442468_r8, &
+                  58.442468_r8, 250092.672000_r8,      1.007400_r8,    115.107340_r8,     12.011000_r8, &
+                  58.442468_r8, 250092.672000_r8,      1.007400_r8,    135.064039_r8,     58.442468_r8, &
             115.107340_r8,     12.011000_r8,     12.011000_r8,     12.011000_r8, 250092.672000_r8, &
-              1.007400_r8,     12.011000_r8,     12.011000_r8, 250092.672000_r8,      1.007400_r8 /)
+                  1.007400_r8,     12.011000_r8,     12.011000_r8, 250092.672000_r8,      1.007400_r8 /)
 #else
       solsym(:l) = &
       (/ 'H2O2    ', 'H2SO4   ', 'SO2     ', 'DMS     ',             &
-         'SOAG    ', 'so4_a1  ',             'pom_a1  ', 'soa_a1  ', &
-         'bc_a1   ', 'ncl_a1  ', 'dst_a1  ', 'mom_a1  ', 'num_a1  ', &
-         'so4_a2  ', 'soa_a2  ', 'ncl_a2  ', 'mom_a2  ', 'num_a2  ', &
-         'dst_a3  ', 'ncl_a3  ', 'so4_a3  ', 'num_a3  ',             &
-         'pom_a4  ', 'bc_a4   ', 'mom_a4  ', 'num_a4  ' /)
+            'SOAG    ', 'so4_a1  ',             'pom_a1  ', 'soa_a1  ', &
+            'bc_a1   ', 'ncl_a1  ', 'dst_a1  ', 'mom_a1  ', 'num_a1  ', &
+            'so4_a2  ', 'soa_a2  ', 'ncl_a2  ', 'mom_a2  ', 'num_a2  ', &
+            'dst_a3  ', 'ncl_a3  ', 'so4_a3  ', 'num_a3  ',             &
+            'pom_a4  ', 'bc_a4   ', 'mom_a4  ', 'num_a4  ' /)
       adv_mass(:l) = &
       (/ 34.0135994_r8, 98.0783997_r8, 64.0647964_r8, 62.1324005_r8,                &
-         12.0109997_r8, 115.107340_r8,                12.0109997_r8, 12.0109997_r8, &
-         12.0109997_r8, 58.4424667_r8, 135.064041_r8, 250092.672_r8, 1.00740004_r8, &
-         115.107340_r8, 12.0109997_r8, 58.4424667_r8, 250092.672_r8, 1.00740004_r8, &
-         135.064041_r8, 58.4424667_r8, 115.107340_r8, 1.00740004_r8,                &
-         12.0109997_r8, 12.0109997_r8, 250092.672_r8, 1.00740004_r8 /)
+            12.0109997_r8, 115.107340_r8,                12.0109997_r8, 12.0109997_r8, &
+            12.0109997_r8, 58.4424667_r8, 135.064041_r8, 250092.672_r8, 1.00740004_r8, &
+            115.107340_r8, 12.0109997_r8, 58.4424667_r8, 250092.672_r8, 1.00740004_r8, &
+            135.064041_r8, 58.4424667_r8, 115.107340_r8, 1.00740004_r8,                &
+            12.0109997_r8, 12.0109997_r8, 250092.672_r8, 1.00740004_r8 /)
 #endif
       else
-         call endrun( '*** bad nbc and/or npoa and/or nsoa' )
+            call endrun( '*** bad nbc and/or npoa and/or nsoa' )
       end if
 
 
@@ -314,20 +319,20 @@
 
       solsym(:l) = &
       (/ 'H2O2    ', 'H2SO4   ', 'SO2     ', 'DMS     ',             &
-         'SOAG    ', 'so4_a1  ',             'pom_a1  ', 'soa_a1  ', &
-         'bc_a1   ', 'ncl_a1  ', 'dst_a1  ', 'num_a1  ', 'so4_a2  ', &
-         'soa_a2  ', 'ncl_a2  ', 'num_a2  ',                         &
-         'dst_a3  ', 'ncl_a3  ', 'so4_a3  ', 'num_a3  ',             &
-         'pom_a4  ', 'bc_a4   ', 'num_a4  ' /)
+            'SOAG    ', 'so4_a1  ',             'pom_a1  ', 'soa_a1  ', &
+            'bc_a1   ', 'ncl_a1  ', 'dst_a1  ', 'num_a1  ', 'so4_a2  ', &
+            'soa_a2  ', 'ncl_a2  ', 'num_a2  ',                         &
+            'dst_a3  ', 'ncl_a3  ', 'so4_a3  ', 'num_a3  ',             &
+            'pom_a4  ', 'bc_a4   ', 'num_a4  ' /)
       adv_mass(:l) = &
       (/ 34.0135994_r8, 98.0783997_r8, 64.0647964_r8, 62.1324005_r8,                &
-         12.0109997_r8, 115.107340_r8,                12.0109997_r8, 12.0109997_r8, &
-         12.0109997_r8, 58.4424667_r8, 135.064041_r8, 1.00740004_r8, 115.107340_r8, &
-         12.0109997_r8, 58.4424667_r8, 1.00740004_r8,                               &
-         135.064041_r8, 58.4424667_r8, 115.107340_r8, 1.00740004_r8,                &
-         12.0109997_r8, 12.0109997_r8, 1.00740004_r8 /)
+            12.0109997_r8, 115.107340_r8,                12.0109997_r8, 12.0109997_r8, &
+            12.0109997_r8, 58.4424667_r8, 135.064041_r8, 1.00740004_r8, 115.107340_r8, &
+            12.0109997_r8, 58.4424667_r8, 1.00740004_r8,                               &
+            135.064041_r8, 58.4424667_r8, 115.107340_r8, 1.00740004_r8,                &
+            12.0109997_r8, 12.0109997_r8, 1.00740004_r8 /)
       else
-         call endrun( '*** bad nbc and/or npoa and/or nsoa' )
+            call endrun( '*** bad nbc and/or npoa and/or nsoa' )
       end if
 
 #else
@@ -336,19 +341,19 @@
 
       solsym(:l) = &
       (/ 'H2O2    ', 'H2SO4   ', 'SO2     ', 'DMS     ',             &
-         'SOAG    ', 'so4_a1  ',             'pom_a1  ', 'soa_a1  ', &
-         'bc_a1   ', 'ncl_a1  ', 'dst_a1  ', 'num_a1  ', 'so4_a2  ', &
-         'soa_a2  ', 'ncl_a2  ', 'num_a2  ',                         &
-         'dst_a3  ', 'ncl_a3  ', 'so4_a3  ', 'num_a3  ' /)
+            'SOAG    ', 'so4_a1  ',             'pom_a1  ', 'soa_a1  ', &
+            'bc_a1   ', 'ncl_a1  ', 'dst_a1  ', 'num_a1  ', 'so4_a2  ', &
+            'soa_a2  ', 'ncl_a2  ', 'num_a2  ',                         &
+            'dst_a3  ', 'ncl_a3  ', 'so4_a3  ', 'num_a3  ' /)
       adv_mass(:l) = &
       (/ 34.0135994_r8, 98.0783997_r8, 64.0647964_r8, 62.1324005_r8,                &
-         12.0109997_r8, 115.107340_r8,                12.0109997_r8, 12.0109997_r8, &
-         12.0109997_r8, 58.4424667_r8, 135.064041_r8, 1.00740004_r8, 115.107340_r8, &
-         12.0109997_r8, 58.4424667_r8, 1.00740004_r8,                               &
-         135.064041_r8, 58.4424667_r8, 115.107340_r8, 1.00740004_r8 /)
+            12.0109997_r8, 115.107340_r8,                12.0109997_r8, 12.0109997_r8, &
+            12.0109997_r8, 58.4424667_r8, 135.064041_r8, 1.00740004_r8, 115.107340_r8, &
+            12.0109997_r8, 58.4424667_r8, 1.00740004_r8,                               &
+            135.064041_r8, 58.4424667_r8, 115.107340_r8, 1.00740004_r8 /)
 
       else
-         call endrun( '*** bad nbc and/or npoa and/or nsoa' )
+            call endrun( '*** bad nbc and/or npoa and/or nsoa' )
       end if
 
 #endif
@@ -363,18 +368,18 @@
       mosaic = .false.
 
       write(iulog,'(/a)') &
-         'l, l2, cnst_name(l), solsym(l2), adv_mass(l2)'
+            'l, l2, cnst_name(l), solsym(l2), adv_mass(l2)'
       do l = 1, pcnst
-         if (l < imozart) then
+            if (l < imozart) then
             write(iulog,'(i4,6x,a)') l, cnst_name(l)
-         else
+            else
             l2 = l - imozart + 1
             if (adv_mass(l2) < 1.0e5_r8) then
-               write(iulog,'(2i4,2x,2a,f9.3)') l, l2, cnst_name(l), solsym(l2), adv_mass(l2)
+                  write(iulog,'(2i4,2x,2a,f9.3)') l, l2, cnst_name(l), solsym(l2), adv_mass(l2)
             else
-               write(iulog,'(2i4,2x,2a,1pe16.8)') l, l2, cnst_name(l), solsym(l2), adv_mass(l2)
+                  write(iulog,'(2i4,2x,2a,1pe16.8)') l, l2, cnst_name(l), solsym(l2), adv_mass(l2)
             end if
-         end if
+            end if
       end do
 
 ! should be done later
@@ -385,22 +390,22 @@
       call modal_aero_register( species_class )
 
       write(*,'(/a)') &
-         'cambox_init_basics calling modal_aero_calcsize_reg'
+            'cambox_init_basics calling modal_aero_calcsize_reg'
       call modal_aero_calcsize_reg( )
 
       write(*,'(/a)') &
-         'cambox_init_basics calling modal_aero_wateruptake_reg'
+            'cambox_init_basics calling modal_aero_wateruptake_reg'
       call modal_aero_wateruptake_reg( )
 
       write(*,'(/a)') &
-         'cambox_init_basics calling cambox_pbuf_init pbuf_init_time'
+            'cambox_init_basics calling cambox_pbuf_init pbuf_init_time'
       call cambox_init_pbuf( ncol, pbuf2d )
 
       write(*,'(/a)') 'cambox_init_basics calling modal_aero_initialize'
       call modal_aero_initialize( pbuf2d, imozart, species_class )
 
       write(*,'(/a)') &
-         'cambox_init_basics calling modal_aero_wateruptake_init'
+            'cambox_init_basics calling modal_aero_wateruptake_init'
       call modal_aero_wateruptake_init( pbuf2d )
 
 
@@ -415,7 +420,7 @@
 
       use buffer, only: dtype_r8
       use physics_buffer, only: physics_buffer_desc, pbuf_initialize, &
-         pbuf_init_time, pbuf_add_field
+            pbuf_init_time, pbuf_add_field
 
       integer, intent(in) :: ncol
 
@@ -441,25 +446,25 @@
 !-------------------------------------------------------------------------------
 #ifdef MAM4_USE_CAMP
       subroutine cambox_init_run( &
-         ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
-         q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, env_state_for_camp, &
-         aero_state_for_camp )
+            ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
+            q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, env_state_for_camp, &
+            aero_state_for_camp )
 #else
       subroutine cambox_init_run( &
-         ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
-         q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
+            ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
+            q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
 #endif
 
       use chem_mods, only: adv_mass, gas_pcnst, imozart
       use physconst, only: pi, epsilo, latvap, latice, &
-                           rh2o, cpair, tmelt, mwdry, r_universal
+                              rh2o, cpair, tmelt, mwdry, r_universal
       use wv_saturation, only: qsat, gestbl
 
       use modal_aero_data
       use modal_aero_amicphys, only: &
-           gaexch_h2so4_uptake_optaa, newnuc_h2so4_conc_optaa, mosaic, &
-           dens_aer, iaer_bc, iaer_pom, iaer_so4, iaer_soa, iaer_ncl, &
-           iaer_mom, iaer_dst
+            gaexch_h2so4_uptake_optaa, newnuc_h2so4_conc_optaa, mosaic, &
+            dens_aer, iaer_bc, iaer_pom, iaer_so4, iaer_soa, iaer_ncl, &
+            iaer_mom, iaer_dst
 
 
       integer,  intent(in   ) :: ncol
@@ -487,9 +492,9 @@
       integer :: l, ll, loffset, lun
       integer :: l_nh3g, l_so2g, l_soag, l_hno3g, l_hclg, l_h2so4g
       integer :: l_num_a1, l_num_a2, l_nh4_a1, l_nh4_a2, &
-                 l_so4_a1, l_so4_a2, l_soa_a1, l_soa_a2
+                  l_so4_a1, l_so4_a2, l_soa_a1, l_soa_a2
       integer :: l_numa, l_so4a, l_nh4a, l_soaa, l_poma, l_bcxa, l_ncla, &
-                 l_dsta, l_no3a, l_clxa, l_caxa, l_co3a, l_moma
+                  l_dsta, l_no3a, l_clxa, l_caxa, l_co3a, l_moma
       integer :: mode123_empty
       integer :: mopt_aero_loadaa, mopt_aero_loadbb
       integer :: n, nacc, nait
@@ -538,7 +543,7 @@
 
       namelist /time_input/ mam_dt, mam_nstep
       namelist /cntl_input/ mdo_gaschem, mdo_gasaerexch, &
-                            mdo_rename, mdo_newnuc, mdo_coag
+                              mdo_rename, mdo_newnuc, mdo_coag
       namelist /met_input/ temp, press, RH_CLEA
       namelist /chem_input/ numc1, numc2, numc3, numc4,          &
                   mfso41, mfpom1, mfsoa1, mfbc1, mfdst1, mfncl1, &
@@ -548,28 +553,28 @@
                   qso2, qh2so4, qsoag
 
       open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
-          read (101, time_input)
-          read (101, cntl_input)
-          read (101, met_input)
-          read (101, chem_input)
+            read (101, time_input)
+            read (101, cntl_input)
+            read (101, met_input)
+            read (101, chem_input)
       close (101)
 
       ! check if mass fraction is larger than one
       if (mfso41+mfpom1+mfsoa1+mfbc1+mfdst1+mfncl1 .gt. 1._r8) then
-          print *, "The summed mass fraction is > 1 in mode 1"
-          stop
+            print *, "The summed mass fraction is > 1 in mode 1"
+            stop
       end if
       if (mfso42+mfsoa2+mfncl2 .gt. 1._r8) then
-          print *, "The summed mass fraction is > 1 in mode 2"
-          stop
+            print *, "The summed mass fraction is > 1 in mode 2"
+            stop
       end if
       if (mfdst3+mfncl3+mfso43+mfbc3+mfpom3+mfsoa3 .gt. 1._r8) then
-          print *, "The summed mass fraction is > 1 in mode 3"
-          stop
+            print *, "The summed mass fraction is > 1 in mode 3"
+            stop
       end if
       if (mfpom4+mfbc4 .gt. 1._r8) then
-          print *, "The summed mass fraction is > 1 in mode 4"
-          stop
+            print *, "The summed mass fraction is > 1 in mode 4"
+            stop
       end if
 
       iwrite3x_species_flagaa = 1
@@ -597,10 +602,10 @@
 
       gaexch_h2so4_uptake_optaa =  2  ! 1=sequential prod then loss,  2=prod+loss together
       newnuc_h2so4_conc_optaa   =  2  ! controls treatment of h2so4 concentrationin mam_newnuc_1subcol
-                                      !  1 = use avg. value calculated in standard cam5.2.10 and earlier
-                                      !  2 = use avg. value calculated in mam_gasaerexch_1subcol
-                                      ! 11 = use avg. of initial and final values from mam_gasaerexch_1subcol
-                                      ! 12 = use final value from mam_gasaerexch_1subcol
+                                          !  1 = use avg. value calculated in standard cam5.2.10 and earlier
+                                          !  2 = use avg. value calculated in mam_gasaerexch_1subcol
+                                          ! 11 = use avg. of initial and final values from mam_gasaerexch_1subcol
+                                          ! 12 = use final value from mam_gasaerexch_1subcol
       mopt_h2so4_uptake         = 1   ! *** no longer used
 
       mopt_ait_size       = 2
@@ -663,120 +668,120 @@
 
 ! initialize the aerosol/number mixing ratio
       do k = 1, pver
-         do i = 1, ncol
+            do i = 1, ncol
             do  n = 1, ntot_amode
 
-                sx = log( sigmag_amode(n) )
+                  sx = log( sigmag_amode(n) )
 
-                if      (n == 1) then
-                   dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.20e-6_r8 ! m
-                   tmpfsoa      = mfsoa1
-                   tmpfso4      = mfso41
-                   tmpfncl      = mfncl1
-                   tmpfdst      = mfdst1
-                   tmpfpom      = mfpom1
-                   tmpfbcx      = mfbc1
-                   tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
-                                  tmpfncl - tmpfdst - tmpfpom - tmpfbcx
-                else if (n == 2) then
-                   dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.04e-6_r8
-                   tmpfsoa      = mfsoa2
-                   tmpfso4      = mfso42
-                   tmpfncl      = mfncl2
-                   tmpfdst      = 0._r8
-                   tmpfpom      = 0._r8
-                   tmpfbcx      = 0._r8
-                   tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
-                                  tmpfncl - tmpfdst - tmpfpom - tmpfbcx
-                else if (n == 3) then
-                   dgncur_a(i,k,n) = dgnum_amode(n)  ! 2.00e-6_r8
-                   tmpfsoa      = mfsoa3
-                   tmpfso4      = mfso43
-                   tmpfncl      = mfncl3
-                   tmpfdst      = mfdst3
-                   tmpfpom      = mfpom3
-                   tmpfbcx      = mfbc3
-                   tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
-                                  tmpfncl - tmpfdst - tmpfpom - tmpfbcx
-                else if (n == 4) then
-                   dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.08e-6_r8
-                   tmpfsoa      = 0._r8
-                   tmpfso4      = 0._r8
-                   tmpfncl      = 0._r8
-                   tmpfdst      = 0._r8
-                   tmpfpom      = mfpom4
-                   tmpfbcx      = mfbc4
-                   tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
-                                  tmpfncl - tmpfdst - tmpfpom - tmpfbcx
-                end if
-                ! q(i,k,numptr_amode(n)) = #/kg-air
-                if (n == modeptr_aitken) then
-                   q(i,k,numptr_amode(n)) = numc2 / aircon(i,k) / mwdry
-                   l_num_a2 = numptr_amode(n)
-                   l_so4_a2 = lptr_so4_a_amode(n)
-                else if (n == modeptr_accum) then
-                   q(i,k,numptr_amode(n)) = numc1 / aircon(i,k) / mwdry
-                   l_num_a1 = numptr_amode(n)
-                   l_so4_a1 = lptr_so4_a_amode(n)
-                else if (n == modeptr_pcarbon) then
-                   q(i,k,numptr_amode(n)) = numc4 / aircon(i,k) / mwdry
-                else
-                   q(i,k,numptr_amode(n)) = numc3 / aircon(i,k) / mwdry
-                end if
+                  if      (n == 1) then
+                        dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.20e-6_r8 ! m
+                        tmpfsoa      = mfsoa1
+                        tmpfso4      = mfso41
+                        tmpfncl      = mfncl1
+                        tmpfdst      = mfdst1
+                        tmpfpom      = mfpom1
+                        tmpfbcx      = mfbc1
+                        tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
+                                    tmpfncl - tmpfdst - tmpfpom - tmpfbcx
+                  else if (n == 2) then
+                        dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.04e-6_r8
+                        tmpfsoa      = mfsoa2
+                        tmpfso4      = mfso42
+                        tmpfncl      = mfncl2
+                        tmpfdst      = 0._r8
+                        tmpfpom      = 0._r8
+                        tmpfbcx      = 0._r8
+                        tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
+                                    tmpfncl - tmpfdst - tmpfpom - tmpfbcx
+                  else if (n == 3) then
+                        dgncur_a(i,k,n) = dgnum_amode(n)  ! 2.00e-6_r8
+                        tmpfsoa      = mfsoa3
+                        tmpfso4      = mfso43
+                        tmpfncl      = mfncl3
+                        tmpfdst      = mfdst3
+                        tmpfpom      = mfpom3
+                        tmpfbcx      = mfbc3
+                        tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
+                                    tmpfncl - tmpfdst - tmpfpom - tmpfbcx
+                  else if (n == 4) then
+                        dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.08e-6_r8
+                        tmpfsoa      = 0._r8
+                        tmpfso4      = 0._r8
+                        tmpfncl      = 0._r8
+                        tmpfdst      = 0._r8
+                        tmpfpom      = mfpom4
+                        tmpfbcx      = mfbc4
+                        tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
+                                    tmpfncl - tmpfdst - tmpfpom - tmpfbcx
+                  end if
+                  ! q(i,k,numptr_amode(n)) = #/kg-air
+                  if (n == modeptr_aitken) then
+                        q(i,k,numptr_amode(n)) = numc2 / aircon(i,k) / mwdry
+                        l_num_a2 = numptr_amode(n)
+                        l_so4_a2 = lptr_so4_a_amode(n)
+                  else if (n == modeptr_accum) then
+                        q(i,k,numptr_amode(n)) = numc1 / aircon(i,k) / mwdry
+                        l_num_a1 = numptr_amode(n)
+                        l_so4_a1 = lptr_so4_a_amode(n)
+                  else if (n == modeptr_pcarbon) then
+                        q(i,k,numptr_amode(n)) = numc4 / aircon(i,k) / mwdry
+                  else
+                        q(i,k,numptr_amode(n)) = numc3 / aircon(i,k) / mwdry
+                  end if
       
-                ! tmpvol: m3-dry-aerosol/kg-air
-                tmpvol  = q(i,k,numptr_amode(n)) * &
-                          (dgncur_a(i,k,n)**3) * &
-                          (pi/6.0_r8) * exp(4.5_r8*sx*sx)
-                tmpdens = 1.0_r8 /                           &
-                          ( (tmpfsoa / dens_aer(iaer_soa)) + &
-                            (tmpfso4 / dens_aer(iaer_so4)) + &
-                            (tmpfbcx / dens_aer(iaer_bc )) + &
-                            (tmpfpom / dens_aer(iaer_pom)) + &
-                            (tmpfncl / dens_aer(iaer_ncl)) + &
-                            (tmpfdst / dens_aer(iaer_dst)) + &
-                            (tmpfmom / dens_aer(iaer_mom))   )
-                tmpmass = tmpvol*tmpdens   ! kg-dry-aerosol/kg-air
+                  ! tmpvol: m3-dry-aerosol/kg-air
+                  tmpvol  = q(i,k,numptr_amode(n)) * &
+                              (dgncur_a(i,k,n)**3) * &
+                              (pi/6.0_r8) * exp(4.5_r8*sx*sx)
+                  tmpdens = 1.0_r8 /                           &
+                              ( (tmpfsoa / dens_aer(iaer_soa)) + &
+                              (tmpfso4 / dens_aer(iaer_so4)) + &
+                              (tmpfbcx / dens_aer(iaer_bc )) + &
+                              (tmpfpom / dens_aer(iaer_pom)) + &
+                              (tmpfncl / dens_aer(iaer_ncl)) + &
+                              (tmpfdst / dens_aer(iaer_dst)) + &
+                              (tmpfmom / dens_aer(iaer_mom))   )
+                  tmpmass = tmpvol*tmpdens   ! kg-dry-aerosol/kg-air
 
-                !print *, 'soa', dens_aer(iaer_soa), '\so4', dens_aer(iaer_so4), 'bc', dens_aer(iaer_bc), 'pom', dens_aer(iaer_pom), 'ncl' , dens_aer(iaer_ncl), 'dst', dens_aer(iaer_dst)
+                  !print *, 'soa', dens_aer(iaer_soa), '\so4', dens_aer(iaer_so4), 'bc', dens_aer(iaer_bc), 'pom', dens_aer(iaer_pom), 'ncl' , dens_aer(iaer_ncl), 'dst', dens_aer(iaer_dst)
 
-                l_so4a = lptr_so4_a_amode(n)
-                l_nh4a = -1
-                l_soaa = lptr_soa_a_amode(n)
-                l_poma = lptr_pom_a_amode(n)
-                if (npoa == 2) l_poma = lptr_poma_a_amode(n)
-                l_bcxa = lptr_bc_a_amode(n)
-                if (nbc  == 2) l_bcxa = lptr_bca_a_amode(n)
-                l_ncla = lptr_nacl_a_amode(n)
-                l_dsta = lptr_dust_a_amode(n)
-                l_moma = lptr_mom_a_amode(n)
+                  l_so4a = lptr_so4_a_amode(n)
+                  l_nh4a = -1
+                  l_soaa = lptr_soa_a_amode(n)
+                  l_poma = lptr_pom_a_amode(n)
+                  if (npoa == 2) l_poma = lptr_poma_a_amode(n)
+                  l_bcxa = lptr_bc_a_amode(n)
+                  if (nbc  == 2) l_bcxa = lptr_bca_a_amode(n)
+                  l_ncla = lptr_nacl_a_amode(n)
+                  l_dsta = lptr_dust_a_amode(n)
+                  l_moma = lptr_mom_a_amode(n)
 #if ( defined MOSAIC_SPECIES )
-                l_no3a = lptr_no3_a_amode(n)
-                l_clxa = lptr_cl_a_amode(n)
-                l_caxa = lptr_ca_a_amode(n)
-                l_co3a = lptr_co3_a_amode(n)
+                  l_no3a = lptr_no3_a_amode(n)
+                  l_clxa = lptr_cl_a_amode(n)
+                  l_caxa = lptr_ca_a_amode(n)
+                  l_co3a = lptr_co3_a_amode(n)
 #else
-                l_no3a = -1
-                l_clxa = -1
-                l_caxa = -1
-                l_co3a = -1
+                  l_no3a = -1
+                  l_clxa = -1
+                  l_caxa = -1
+                  l_co3a = -1
 #endif
-                ! q array return kg-aer/kg-air
-                if (l_so4a > 0) q(i,k,l_so4a) = tmpmass*tmpfso4
-                if (l_nh4a > 0) q(i,k,l_nh4a) = tmpmass*tmpfnh4
-                if (l_soaa > 0) q(i,k,l_soaa) = tmpmass*tmpfsoa
-                if (l_poma > 0) q(i,k,l_poma) = tmpmass*tmpfpom
-                if (l_bcxa > 0) q(i,k,l_bcxa) = tmpmass*tmpfbcx
-                if (l_dsta > 0) q(i,k,l_dsta) = tmpmass*tmpfdst
-                if (l_ncla > 0) q(i,k,l_ncla) = tmpmass*tmpfncl
-                if (l_moma > 0) q(i,k,l_moma) = tmpmass*tmpfmom
-                if (l_no3a > 0) q(i,k,l_no3a) = tmpmass*tmpfno3
-                if (l_clxa > 0) q(i,k,l_clxa) = tmpmass*tmpfclx
-                if (l_caxa > 0) q(i,k,l_caxa) = tmpmass*tmpfcax
-                if (l_co3a > 0) q(i,k,l_co3a) = tmpmass*tmpfco3
+                  ! q array return kg-aer/kg-air
+                  if (l_so4a > 0) q(i,k,l_so4a) = tmpmass*tmpfso4
+                  if (l_nh4a > 0) q(i,k,l_nh4a) = tmpmass*tmpfnh4
+                  if (l_soaa > 0) q(i,k,l_soaa) = tmpmass*tmpfsoa
+                  if (l_poma > 0) q(i,k,l_poma) = tmpmass*tmpfpom
+                  if (l_bcxa > 0) q(i,k,l_bcxa) = tmpmass*tmpfbcx
+                  if (l_dsta > 0) q(i,k,l_dsta) = tmpmass*tmpfdst
+                  if (l_ncla > 0) q(i,k,l_ncla) = tmpmass*tmpfncl
+                  if (l_moma > 0) q(i,k,l_moma) = tmpmass*tmpfmom
+                  if (l_no3a > 0) q(i,k,l_no3a) = tmpmass*tmpfno3
+                  if (l_clxa > 0) q(i,k,l_clxa) = tmpmass*tmpfclx
+                  if (l_caxa > 0) q(i,k,l_caxa) = tmpmass*tmpfcax
+                  if (l_co3a > 0) q(i,k,l_co3a) = tmpmass*tmpfco3
 
             end do ! n
-         end do ! i
+            end do ! i
       end do ! k             
 
 ! initialize the gas mixing ratio
@@ -796,13 +801,13 @@
 !-------------------------------------------------------------------------------
 #ifdef MAM4_USE_CAMP
       subroutine cambox_do_run( &
-         ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
-         q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, pbuf2d, &
-         env_state_for_camp, aero_state_for_camp )
+            ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
+            q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, pbuf2d, &
+            env_state_for_camp, aero_state_for_camp )
 #else
       subroutine cambox_do_run( &
-         ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
-         q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, pbuf2d )
+            ncol, nstop, deltat, t, pmid, pdel, zm, pblh, cld, relhum, qv, &
+            q, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens, pbuf2d )
 #endif
 
       use chem_mods, only: adv_mass, gas_pcnst, imozart
@@ -813,7 +818,7 @@
       use modal_aero_data
       use modal_aero_calcsize, only: modal_aero_calcsize_sub
       use modal_aero_amicphys, only: modal_aero_amicphys_intr, &
-          gaexch_h2so4_uptake_optaa, newnuc_h2so4_conc_optaa, mosaic
+            gaexch_h2so4_uptake_optaa, newnuc_h2so4_conc_optaa, mosaic
       use modal_aero_wateruptake, only: modal_aero_wateruptake_dr
       use gaschem_simple, only: gaschem_simple_sub
       use cloudchem_simple, only: cloudchem_simple_sub
@@ -857,7 +862,7 @@
       integer :: l_num_a1, l_nh4_a1, l_so4_a1
       integer :: l_num_a2, l_nh4_a2, l_so4_a2
       integer :: lmz_h2so4g, lmz_nh3g, lmz_so2g, &
-                 lmz_hno3g, lmz_hclg, lmz_soag
+                  lmz_hno3g, lmz_hclg, lmz_soag
       integer :: lmz_num_a1, lmz_nh4_a1, lmz_so4_a1
       integer :: lmz_num_a2, lmz_nh4_a2, lmz_so4_a2
       integer :: lchnk, loffset, lun
@@ -923,26 +928,26 @@
       integer :: dimids(2), varid(23)
       character (8) :: date
       real(r8), dimension(0:nstop,ntot_amode) :: tmp_dgn_a, &
-                               tmp_dgn_awet, tmp_num_aer, &
-                               tmp_so4_aer, tmp_soa_aer
+                                    tmp_dgn_awet, tmp_num_aer, &
+                                    tmp_so4_aer, tmp_soa_aer
       real(r8), dimension(0:nstop)            :: tmp_h2so4, &
-                                               tmp_soag
+                                                tmp_soag
       real(r8), dimension(0:nstop,ntot_amode) :: qtend_cond_aging_so4, &
-                                               qtend_cond_aging_soa, &
-                                               qtend_rename_so4, &
-                                               qtend_rename_soa, &
-                                               qtend_newnuc_so4, &
-                                               qtend_newnuc_soa, &
-                                               qtend_coag_so4, &
-                                               qtend_coag_soa
+                                                qtend_cond_aging_soa, &
+                                                qtend_rename_so4, &
+                                                qtend_rename_soa, &
+                                                qtend_newnuc_so4, &
+                                                qtend_newnuc_soa, &
+                                                qtend_coag_so4, &
+                                                qtend_coag_soa
       real(r8), dimension(0:nstop)            :: qtend_cond_aging_h2so4, &
-                                               qtend_cond_aging_soag,  &
-                                               qtend_rename_h2so4,     &
-                                               qtend_rename_soag,      &
-                                               qtend_newnuc_h2so4,     &
-                                               qtend_newnuc_soag,      &
-                                               qtend_coag_h2so4,       &
-                                               qtend_coag_soag
+                                                qtend_cond_aging_soag,  &
+                                                qtend_rename_h2so4,     &
+                                                qtend_rename_soag,      &
+                                                qtend_newnuc_h2so4,     &
+                                                qtend_newnuc_soag,      &
+                                                qtend_coag_h2so4,       &
+                                                qtend_coag_soag
 
 #ifdef MAM4_USE_CAMP
       type(env_state_t) :: env_state_for_camp
@@ -1074,10 +1079,10 @@
 
       ! Add global attribute
       call check( nf90_put_att(ncid, NF90_GLOBAL, &
-                               "Created_by", "PNNL") )
+                                    "Created_by", "PNNL") )
       call date_and_time(date)
       call check( nf90_put_att(ncid, NF90_GLOBAL, &
-                               "Created_date", date) )
+                                    "Created_date", date) )
 
       ! End define mode. This tells netCDF we are done defining
       ! metadata.
@@ -1150,25 +1155,25 @@
       tmp_dgn_a(nstep,1:ntot_amode)        = dgncur_a(1,1,1:ntot_amode)
       tmp_dgn_awet(nstep,1:ntot_amode)     = dgncur_awet(1,1,1:ntot_amode)
       do i = 1, ntot_amode
-         tmp_num_aer(nstep,i)              = q(1,1,numptr_amode(i))
-         l                                 = lptr_so4_a_amode(i)
-         if  (l .gt. 0) then 
-             tmp_so4_aer(nstep,i)          = q(1,1,l)
-             l2                            = l - loffset
-             qtend_cond_aging_so4(nstep,i) = dvmrdt_cond(1,1,l2)
-             qtend_rename_so4(nstep,i)     = dvmrdt_rnam(1,1,l2)
-             qtend_newnuc_so4(nstep,i)     = dvmrdt_nnuc(1,1,l2)
-             qtend_coag_so4(nstep,i)       = dvmrdt_coag(1,1,l2)
-         end if
-         l                                 = lptr_soa_a_amode(i)
-         if  (l .gt. 0) then 
-             tmp_soa_aer(nstep,i)          = q(1,1,l)
-             l2                            = l - loffset
-             qtend_cond_aging_soa(nstep,i) = dvmrdt_cond(1,1,l2)
-             qtend_rename_soa(nstep,i)     = dvmrdt_rnam(1,1,l2)
-             qtend_newnuc_soa(nstep,i)     = dvmrdt_nnuc(1,1,l2)
-             qtend_coag_soa(nstep,i)       = dvmrdt_coag(1,1,l2)
-         end if
+            tmp_num_aer(nstep,i)              = q(1,1,numptr_amode(i))
+            l                                 = lptr_so4_a_amode(i)
+            if  (l .gt. 0) then 
+                  tmp_so4_aer(nstep,i)          = q(1,1,l)
+                  l2                            = l - loffset
+                  qtend_cond_aging_so4(nstep,i) = dvmrdt_cond(1,1,l2)
+                  qtend_rename_so4(nstep,i)     = dvmrdt_rnam(1,1,l2)
+                  qtend_newnuc_so4(nstep,i)     = dvmrdt_nnuc(1,1,l2)
+                  qtend_coag_so4(nstep,i)       = dvmrdt_coag(1,1,l2)
+            end if
+            l                                 = lptr_soa_a_amode(i)
+            if  (l .gt. 0) then 
+                  tmp_soa_aer(nstep,i)          = q(1,1,l)
+                  l2                            = l - loffset
+                  qtend_cond_aging_soa(nstep,i) = dvmrdt_cond(1,1,l2)
+                  qtend_rename_soa(nstep,i)     = dvmrdt_rnam(1,1,l2)
+                  qtend_newnuc_soa(nstep,i)     = dvmrdt_nnuc(1,1,l2)
+                  qtend_coag_soa(nstep,i)       = dvmrdt_coag(1,1,l2)
+            end if
       end do
       tmp_h2so4(nstep)                     = q(1,1,l_h2so4g)
       l2                                   = l_h2so4g - loffset
@@ -1202,7 +1207,7 @@ main_time_loop: &
       tnew = told + deltat
 
       write(lun_outfld,'(/a,i5,2f10.3)') 'istep, told, tnew (h) = ', &
-         istep, told/3600.0_r8, tnew/3600.0_r8
+            istep, told/3600.0_r8, tnew/3600.0_r8
 
 
 !
@@ -1230,69 +1235,69 @@ main_time_loop: &
       ptend%q     = dqdt
 ! load pbuf
       call load_pbuf( pbuf, lchnk, ncol, &
-         cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
+            cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
 
 ! call calcsize
       call modal_aero_calcsize_sub( state, ptend, deltat, pbuf, &
-         do_adjust_in=.true., do_aitacc_transfer_in=.true. )
+            do_adjust_in=.true., do_aitacc_transfer_in=.true. )
 
 ! unload ptend
       dotend = ptend%lq
       dqdt   = ptend%q
 ! unload pbuf
       call unload_pbuf( pbuf, lchnk, ncol, &
-         cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
+            cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
       
 ! apply tendencies
       itmpb = 0
       do l = 1, pcnst
-         itmpa = 0
-         if ( .not. dotend(l) ) cycle
-         do k = 1, pver
-         do i = 1, ncol
+            itmpa = 0
+            if ( .not. dotend(l) ) cycle
+            do k = 1, pver
+            do i = 1, ncol
             if (abs(dqdt(i,k,l)) > 1.0e-30_r8) then
 !              write(lun,'(2a,2i4,1p,2e10.2)') &
 !                 'calcsize tend > 0   ', cnst_name(l), i, k, &
 !                 q(i,k,l), dqdt(i,k,l)*deltat
-               itmpa = itmpa + 1
+                  itmpa = itmpa + 1
             end if
             q(i,k,l) = q(i,k,l) + dqdt(i,k,l)*deltat
             q(i,k,l) = max( q(i,k,l), 0.0_r8 )
-         end do
-         end do
-         if (itmpa > 0) then
+            end do
+            end do
+            if (itmpa > 0) then
             write(lun,'(2a,i7)') &
-               'calcsize tend > 0   ', cnst_name(l), itmpa
+                  'calcsize tend > 0   ', cnst_name(l), itmpa
             itmpb = itmpb + 1
-         end if
+            end if
       end do
       if (itmpb > 0) then
-         write(lun,'(a,i7)') 'calcsize tend > 0 for nspecies =', itmpb
+            write(lun,'(a,i7)') 'calcsize tend > 0 for nspecies =', itmpb
       else
-         write(lun,'(a,i7)') 'calcsize tend = 0 for all species'
+            write(lun,'(a,i7)') 'calcsize tend = 0 for all species'
       end if
 
       do i = 1, ncol
       lun = 29 + i
       write(lun,'(/a,i8)') 'cambox_do_run doing calcsize, istep=', istep
       if (itmpb > 0) then
-         write(lun,'(a,i7)') 'calcsize tend > 0 for nspecies =', itmpb
+            write(lun,'(a,i7)') 'calcsize tend > 0 for nspecies =', itmpb
       else
-         write(lun,'(a,i7)') 'calcsize tend = 0 for all species'
+            write(lun,'(a,i7)') 'calcsize tend = 0 for all species'
       end if
       if (iwrite3x_units_flagaa >= 10) then
-         tmpch80 = '  (#/mg,  nmol/mol,  nm)'
-         tmpa = 1.0e9*mwdry/adv_mass(lmz_so4_a1)
+            tmpch80 = '  (#/mg,  nmol/mol,  nm)'
+            tmpa = 1.0e9*mwdry/adv_mass(lmz_so4_a1)
       else
-         tmpch80 = '  (#/mg,  ug/kg,  nm)'
-         tmpa = 1.0e9
+            tmpch80 = '  (#/mg,  ug/kg,  nm)'
+            tmpa = 1.0e9
       end if
       write(lun,'( 2a)') &
-         'k, accum num, so4, dgncur_a, same for aitken', trim(tmpch80)
+            'k, accum num, so4, dgncur_a, same for aitken', trim(tmpch80)
       do k = 1, pver
       write(lun,'( i4,1p,4(2x,3e12.4))') k, &
-         q(i,k,l_num_a1)*1.0e-6, q(i,k,l_so4_a1)*tmpa, dgncur_a(i,k,nacc)*1.0e9, &
-         q(i,k,l_num_a2)*1.0e-6, q(i,k,l_so4_a2)*tmpa, dgncur_a(i,k,nait)*1.0e9
+            q(i,k,l_num_a1)*1.0e-6, q(i,k,l_so4_a1)*tmpa, dgncur_a(i,k,nacc)*1.0e9, &
+            q(i,k,l_num_a2)*1.0e-6, q(i,k,l_so4_a2)*tmpa, dgncur_a(i,k,nait)*1.0e9
       end do
       end do ! i
 
@@ -1319,14 +1324,14 @@ main_time_loop: &
       state%q     = q
 ! load pbuf
       call load_pbuf( pbuf, lchnk, ncol, &
-         cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
+            cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
 
 ! call wateruptake
       call modal_aero_wateruptake_dr( state, pbuf )
 
 ! unload pbuf
       call unload_pbuf( pbuf, lchnk, ncol, &
-         cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
+            cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
 
 !
 ! switch from q & qqcw to vmr and vmrcw
@@ -1337,11 +1342,11 @@ main_time_loop: &
       vmr = 0.0_r8
       vmrcw = 0.0_r8
       do l = imozart, pcnst
-         l2 = l - loffset
-         mmr(  1:ncol,1:pver,l2) = q(  1:ncol,1:pver,l)
-         mmrcw(1:ncol,1:pver,l2) = qqcw(1:ncol,1:pver,l)
-         vmr(  1:ncol,1:pver,l2) = mmr(  1:ncol,1:pver,l2)*mwdry/adv_mass(l2)
-         vmrcw(1:ncol,1:pver,l2) = mmrcw(1:ncol,1:pver,l2)*mwdry/adv_mass(l2)
+            l2 = l - loffset
+            mmr(  1:ncol,1:pver,l2) = q(  1:ncol,1:pver,l)
+            mmrcw(1:ncol,1:pver,l2) = qqcw(1:ncol,1:pver,l)
+            vmr(  1:ncol,1:pver,l2) = mmr(  1:ncol,1:pver,l2)*mwdry/adv_mass(l2)
+            vmrcw(1:ncol,1:pver,l2) = mmrcw(1:ncol,1:pver,l2)*mwdry/adv_mass(l2)
       end do
 
 !
@@ -1362,16 +1367,16 @@ main_time_loop: &
 ! CAMP chem
 ! 
       do naermode = 1, ntot_amode
-        !> Load aerosol state [kg m-3]
-        if (lptr_so4_a_amode(naermode) > 0) aero_state_for_camp%qso4(naermode) = q(1,1,lptr_so4_a_amode(naermode)) * to_kgperm3
-        if (lptr_pom_a_amode(naermode) > 0) aero_state_for_camp%qpom(naermode) = q(1,1,lptr_pom_a_amode(naermode)) * to_kgperm3
-        if (lptr_soa_a_amode(naermode) > 0) aero_state_for_camp%qsoa(naermode) = q(1,1,lptr_soa_a_amode(naermode)) * to_kgperm3
-        if (lptr_bc_a_amode(naermode) > 0) aero_state_for_camp%qbc(naermode) = q(1,1,lptr_bc_a_amode(naermode)) * to_kgperm3
-        if (lptr_dust_a_amode(naermode) > 0) aero_state_for_camp%qdst(naermode) = q(1,1,lptr_dust_a_amode(naermode)) * to_kgperm3
-        if (lptr_nacl_a_amode(naermode) > 0) aero_state_for_camp%qncl(naermode) = q(1,1,lptr_nacl_a_amode(naermode)) * to_kgperm3
-        aero_state_for_camp%qaerwat(naermode) = qaerwat(1,1,naermode) * to_kgperm3
-        aero_state_for_camp%GMD(naermode) = dgnum_amode(naermode)
-        aero_state_for_camp%GSD(naermode) = sigmag_amode(naermode)
+            !> Load aerosol state [kg m-3]
+            if (lptr_so4_a_amode(naermode) > 0) aero_state_for_camp%qso4(naermode) = q(1,1,lptr_so4_a_amode(naermode)) * to_kgperm3
+            if (lptr_pom_a_amode(naermode) > 0) aero_state_for_camp%qpom(naermode) = q(1,1,lptr_pom_a_amode(naermode)) * to_kgperm3
+            if (lptr_soa_a_amode(naermode) > 0) aero_state_for_camp%qsoa(naermode) = q(1,1,lptr_soa_a_amode(naermode)) * to_kgperm3
+            if (lptr_bc_a_amode(naermode) > 0) aero_state_for_camp%qbc(naermode) = q(1,1,lptr_bc_a_amode(naermode)) * to_kgperm3
+            if (lptr_dust_a_amode(naermode) > 0) aero_state_for_camp%qdst(naermode) = q(1,1,lptr_dust_a_amode(naermode)) * to_kgperm3
+            if (lptr_nacl_a_amode(naermode) > 0) aero_state_for_camp%qncl(naermode) = q(1,1,lptr_nacl_a_amode(naermode)) * to_kgperm3
+            aero_state_for_camp%qaerwat(naermode) = qaerwat(1,1,naermode) * to_kgperm3
+            aero_state_for_camp%GMD(naermode) = dgnum_amode(naermode)
+            aero_state_for_camp%GSD(naermode) = sigmag_amode(naermode)
       end do
 
       !> Load gas state
@@ -1379,39 +1384,39 @@ main_time_loop: &
       gas_state_for_camp%vmr = 1.0e+6_r8 * vmr(1,1,:)
       
       call mam4_camp_interface_solve(env_state_for_camp, &
-                                     aero_state_for_camp, &
-                                     gas_state_for_camp, deltat)
+                                          aero_state_for_camp, &
+                                          gas_state_for_camp, deltat)
 
       vmr(1,1,:) = 1.0e-6_r8 * gas_state_for_camp%vmr
       deallocate(gas_state_for_camp%vmr)
 
       do naermode = 1, ntot_amode
-          !> Load aerosol state [m3 m-3]?
-          if (lptr_so4_a_amode(naermode) > 0) vmr(1,1,lptr_so4_a_amode(naermode)-loffset) = &
-              aero_state_for_camp%qso4(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_so4_a_amode(naermode)-loffset)
-          if (lptr_pom_a_amode(naermode) > 0) vmr(1,1,lptr_pom_a_amode(naermode)-loffset) = &
-              aero_state_for_camp%qpom(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_pom_a_amode(naermode)-loffset)
-          if (lptr_soa_a_amode(naermode) > 0) vmr(1,1,lptr_soa_a_amode(naermode)-loffset) = &
-              aero_state_for_camp%qsoa(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_soa_a_amode(naermode)-loffset)
-          if (lptr_bc_a_amode(naermode) > 0) vmr(1,1,lptr_bc_a_amode(naermode)-loffset) = &
-              aero_state_for_camp%qbc(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_bc_a_amode(naermode)-loffset)
-          if (lptr_dust_a_amode(naermode) > 0) vmr(1,1,lptr_dust_a_amode(naermode)-loffset) = &
-              aero_state_for_camp%qdst(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_dust_a_amode(naermode)-loffset)
-          if (lptr_nacl_a_amode(naermode) > 0) vmr(1,1,lptr_nacl_a_amode(naermode)-loffset) = &
-              aero_state_for_camp%qncl(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_nacl_a_amode(naermode)-loffset)
-       end do
-                                     
+            !> Load aerosol state [m3 m-3]?
+            if (lptr_so4_a_amode(naermode) > 0) vmr(1,1,lptr_so4_a_amode(naermode)-loffset) = &
+                  aero_state_for_camp%qso4(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_so4_a_amode(naermode)-loffset)
+            if (lptr_pom_a_amode(naermode) > 0) vmr(1,1,lptr_pom_a_amode(naermode)-loffset) = &
+                  aero_state_for_camp%qpom(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_pom_a_amode(naermode)-loffset)
+            if (lptr_soa_a_amode(naermode) > 0) vmr(1,1,lptr_soa_a_amode(naermode)-loffset) = &
+                  aero_state_for_camp%qsoa(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_soa_a_amode(naermode)-loffset)
+            if (lptr_bc_a_amode(naermode) > 0) vmr(1,1,lptr_bc_a_amode(naermode)-loffset) = &
+                  aero_state_for_camp%qbc(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_bc_a_amode(naermode)-loffset)
+            if (lptr_dust_a_amode(naermode) > 0) vmr(1,1,lptr_dust_a_amode(naermode)-loffset) = &
+                  aero_state_for_camp%qdst(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_dust_a_amode(naermode)-loffset)
+            if (lptr_nacl_a_amode(naermode) > 0) vmr(1,1,lptr_nacl_a_amode(naermode)-loffset) = &
+                  aero_state_for_camp%qncl(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_nacl_a_amode(naermode)-loffset)
+            end do
+                                          
 #else
 
-         call gaschem_simple_sub(                       &
+            call gaschem_simple_sub(                       &
             lchnk,    ncol,     nstep,               &
             loffset,  deltat,                        &
             vmr,                tau_gaschem_simple      )
 #endif
 
       else
-         ! assumed constant gas chemistry production rate (mol/mol)
-         vmr(1:ncol,:,lmz_h2so4g) = vmr(1:ncol,:,lmz_h2so4g) + 1.e-16_r8*deltat
+            ! assumed constant gas chemistry production rate (mol/mol)
+            vmr(1:ncol,:,lmz_h2so4g) = vmr(1:ncol,:,lmz_h2so4g) + 1.e-16_r8*deltat
       end if
 
       h2so4_aft_gaschem(1:ncol,:) = vmr(1:ncol,:,lmz_h2so4g)
@@ -1421,16 +1426,16 @@ main_time_loop: &
 !
       lun = 6
       write(lun,'(/a,i8)') &
-         'cambox_do_run doing cloudchem simple, istep=', istep
+            'cambox_do_run doing cloudchem simple, istep=', istep
       vmr_svbb = vmr
       vmrcw_svbb = vmrcw
 
       if (mdo_cloudchem > 0 .and. maxval( cld_ncol(:,:) ) > 1.0e-6_r8) then
 
       call cloudchem_simple_sub(                  &
-         lchnk,    ncol,     nstep,               &
-         loffset,  deltat,                        &
-         vmr,      vmrcw,    cld_ncol             )
+            lchnk,    ncol,     nstep,               &
+            loffset,  deltat,                        &
+            vmr,      vmrcw,    cld_ncol             )
 
       end if ! (mdo_cloudchem > 0 .and. maxval( cld_ncol(:,:) ) > 1.0e-6_r8) then
 
@@ -1446,21 +1451,21 @@ main_time_loop: &
       dvmrdt_bb = 0.0_r8 ; dvmrcwdt_bb = 0.0_r8
 
       call modal_aero_amicphys_intr(              &
-         mdo_gasaerexch,     mdo_rename,          &
-         mdo_newnuc,         mdo_coag,            &
-         lchnk,    ncol,     nstep,               &
-         loffset,  deltat,                        &
-         latndx,   lonndx,                        &
-         t,        pmid,     pdel,                &
-         zm,       pblh,                          &
-         qv,       cld_ncol,                      &
-         vmr,                vmrcw,               &   ! after  cloud chem
-         vmr_svaa,                                &   ! before gas chem
-         vmr_svbb,           vmrcw_svbb,          &   ! before cloud chem
-         nqtendbb,           nqqcwtendbb,         &
-         dvmrdt_bb,          dvmrcwdt_bb,         &
-         dgncur_a,           dgncur_awet,         &
-         wetdens,            qaerwat              )
+            mdo_gasaerexch,     mdo_rename,          &
+            mdo_newnuc,         mdo_coag,            &
+            lchnk,    ncol,     nstep,               &
+            loffset,  deltat,                        &
+            latndx,   lonndx,                        &
+            t,        pmid,     pdel,                &
+            zm,       pblh,                          &
+            qv,       cld_ncol,                      &
+            vmr,                vmrcw,               &   ! after  cloud chem
+            vmr_svaa,                                &   ! before gas chem
+            vmr_svbb,           vmrcw_svbb,          &   ! before cloud chem
+            nqtendbb,           nqqcwtendbb,         &
+            dvmrdt_bb,          dvmrcwdt_bb,         &
+            dgncur_a,           dgncur_awet,         &
+            wetdens,            qaerwat              )
 
       dvmrdt_cond(  :,:,:) = dvmrdt_bb(  :,:,:,iqtend_cond)
       dvmrdt_rnam(  :,:,:) = dvmrdt_bb(  :,:,:,iqtend_rnam)
@@ -1483,11 +1488,11 @@ main_time_loop: &
 !
       loffset = imozart - 1
       do l = imozart, pcnst
-         l2 = l - loffset
-         mmr(  1:ncol,1:pver,l2) = vmr(  1:ncol,1:pver,l2) * adv_mass(l2)/mwdry
-         mmrcw(1:ncol,1:pver,l2) = vmrcw(1:ncol,1:pver,l2) * adv_mass(l2)/mwdry
-         q(    1:ncol,1:pver,l)  = mmr(  1:ncol,1:pver,l2)
-         qqcw( 1:ncol,1:pver,l)  = mmrcw(1:ncol,1:pver,l2)
+            l2 = l - loffset
+            mmr(  1:ncol,1:pver,l2) = vmr(  1:ncol,1:pver,l2) * adv_mass(l2)/mwdry
+            mmrcw(1:ncol,1:pver,l2) = vmrcw(1:ncol,1:pver,l2) * adv_mass(l2)/mwdry
+            q(    1:ncol,1:pver,l)  = mmr(  1:ncol,1:pver,l2)
+            qqcw( 1:ncol,1:pver,l)  = mmrcw(1:ncol,1:pver,l2)
       end do
 
 !
@@ -1496,25 +1501,25 @@ main_time_loop: &
       tmp_dgn_a(nstep,1:ntot_amode)        = dgncur_a(1,1,1:ntot_amode)
       tmp_dgn_awet(nstep,1:ntot_amode)     = dgncur_awet(1,1,1:ntot_amode)
       do i = 1, ntot_amode
-         tmp_num_aer(nstep,i)              = q(1,1,numptr_amode(i))
-         l                                 = lptr_so4_a_amode(i)
-         if  (l .gt. 0) then 
-             tmp_so4_aer(nstep,i)          = q(1,1,l)
-             l2                            = l - loffset
-             qtend_cond_aging_so4(nstep,i) = dvmrdt_cond(1,1,l2)
-             qtend_rename_so4(nstep,i)     = dvmrdt_rnam(1,1,l2)
-             qtend_newnuc_so4(nstep,i)     = dvmrdt_nnuc(1,1,l2)
-             qtend_coag_so4(nstep,i)       = dvmrdt_coag(1,1,l2)
-         end if
-         l                                 = lptr_soa_a_amode(i)
-         if  (l .gt. 0) then 
-             tmp_soa_aer(nstep,i)          = q(1,1,l)
-             l2                            = l - loffset
-             qtend_cond_aging_soa(nstep,i) = dvmrdt_cond(1,1,l2)
-             qtend_rename_soa(nstep,i)     = dvmrdt_rnam(1,1,l2)
-             qtend_newnuc_soa(nstep,i)     = dvmrdt_nnuc(1,1,l2)
-             qtend_coag_soa(nstep,i)       = dvmrdt_coag(1,1,l2)
-         end if
+            tmp_num_aer(nstep,i)              = q(1,1,numptr_amode(i))
+            l                                 = lptr_so4_a_amode(i)
+            if  (l .gt. 0) then 
+                  tmp_so4_aer(nstep,i)          = q(1,1,l)
+                  l2                            = l - loffset
+                  qtend_cond_aging_so4(nstep,i) = dvmrdt_cond(1,1,l2)
+                  qtend_rename_so4(nstep,i)     = dvmrdt_rnam(1,1,l2)
+                  qtend_newnuc_so4(nstep,i)     = dvmrdt_nnuc(1,1,l2)
+                  qtend_coag_so4(nstep,i)       = dvmrdt_coag(1,1,l2)
+            end if
+            l                                 = lptr_soa_a_amode(i)
+            if  (l .gt. 0) then 
+                  tmp_soa_aer(nstep,i)          = q(1,1,l)
+                  l2                            = l - loffset
+                  qtend_cond_aging_soa(nstep,i) = dvmrdt_cond(1,1,l2)
+                  qtend_rename_soa(nstep,i)     = dvmrdt_rnam(1,1,l2)
+                  qtend_newnuc_soa(nstep,i)     = dvmrdt_nnuc(1,1,l2)
+                  qtend_coag_soa(nstep,i)       = dvmrdt_coag(1,1,l2)
+            end if
       end do
       tmp_h2so4(nstep)                     = q(1,1,l_h2so4g)
       l2                                   = l_h2so4g - loffset
@@ -1592,17 +1597,17 @@ main_time_loop: &
 
 !-------------------------------------------------------------------------------
       subroutine load_pbuf( pbuf, lchnk, ncol, &
-         cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
+            cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
 
       use chem_mods, only: adv_mass, gas_pcnst, imozart
       use physconst, only: mwdry
 
       use modal_aero_data, only:  &
-         lmassptrcw_amode, nspec_amode, numptrcw_amode, &
-         qqcw_get_field
+            lmassptrcw_amode, nspec_amode, numptrcw_amode, &
+            qqcw_get_field
 
       use physics_buffer, only: physics_buffer_desc, &
-         pbuf_get_index, pbuf_get_field
+            pbuf_get_index, pbuf_get_field
 
       type(physics_buffer_desc), pointer :: pbuf(:)  ! physics buffer for a chunk
 
@@ -1652,11 +1657,11 @@ main_time_loop: &
 
       do n = 1, ntot_amode
       do ll = 0, nspec_amode(n)
-         l = numptrcw_amode(n)
-         if (ll > 0) l = lmassptrcw_amode(ll,n)
-         fldcw => qqcw_get_field( pbuf, l, lchnk )
-         fldcw(:,:) = 0.0_r8
-         fldcw(1:ncol,:) = qqcw(1:ncol,:,l)
+            l = numptrcw_amode(n)
+            if (ll > 0) l = lmassptrcw_amode(ll,n)
+            fldcw => qqcw_get_field( pbuf, l, lchnk )
+            fldcw(:,:) = 0.0_r8
+            fldcw(1:ncol,:) = qqcw(1:ncol,:,l)
       end do
       end do
 
@@ -1667,17 +1672,17 @@ main_time_loop: &
 
 !-------------------------------------------------------------------------------
       subroutine unload_pbuf( pbuf, lchnk, ncol, &
-         cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
+            cld, qqcw, dgncur_a, dgncur_awet, qaerwat, wetdens )
 
       use chem_mods, only: adv_mass, gas_pcnst, imozart
       use physconst, only: mwdry
 
       use modal_aero_data, only:  &
-         lmassptrcw_amode, nspec_amode, numptrcw_amode, &
-         qqcw_get_field
+            lmassptrcw_amode, nspec_amode, numptrcw_amode, &
+            qqcw_get_field
 
       use physics_buffer, only: physics_buffer_desc, &
-         pbuf_get_index, pbuf_get_field
+            pbuf_get_index, pbuf_get_field
 
       type(physics_buffer_desc), pointer :: pbuf(:)  ! physics buffer for a chunk
 
@@ -1708,8 +1713,8 @@ main_time_loop: &
 !     cld(1:ncol,:) = ycld(1:ncol,:)
       tmpa = maxval( abs( cld(1:ncol,:) - ycld(1:ncol,:) ) )
       if (tmpa /= 0.0_r8) then
-         write(*,*) '*** unload_pbuf cld change error - ', tmpa
-         stop
+            write(*,*) '*** unload_pbuf cld change error - ', tmpa
+            stop
       end if
 
       idx = pbuf_get_index( 'DGNUM' )
@@ -1730,10 +1735,10 @@ main_time_loop: &
 
       do n = 1, ntot_amode
       do ll = 0, nspec_amode(n)
-         l = numptrcw_amode(n)
-         if (ll > 0) l = lmassptrcw_amode(ll,n)
-         fldcw => qqcw_get_field( pbuf, l, lchnk )
-         qqcw(1:ncol,:,l) = fldcw(1:ncol,:)
+            l = numptrcw_amode(n)
+            if (ll > 0) l = lmassptrcw_amode(ll,n)
+            fldcw => qqcw_get_field( pbuf, l, lchnk )
+            qqcw(1:ncol,:,l) = fldcw(1:ncol,:)
       end do
       end do
 
@@ -1749,8 +1754,8 @@ main_time_loop: &
       integer, intent(in) :: status
 
       if(status /= nf90_noerr) then
-         print *, trim(nf90_strerror(status))
-         stop "Stopped"
+            print *, trim(nf90_strerror(status))
+            stop "Stopped"
       end if
       end subroutine check
 
