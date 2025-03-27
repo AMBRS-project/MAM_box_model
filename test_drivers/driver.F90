@@ -954,7 +954,6 @@ module driver
       type(gas_state_t) :: gas_state_for_camp
       type(aero_state_t) :: aero_state_for_camp
 #endif
-
 !
 ! output comparison results
 !
@@ -1367,6 +1366,14 @@ main_time_loop: &
 ! CAMP chem
 ! 
       do naermode = 1, ntot_amode
+            if (first_step) then
+                  lso4 = lptr_so4_a_amode
+                  lpom = lptr_pom_a_amode
+                  lsoa = lptr_soa_a_amode
+                  lbc = lptr_bc_a_amode
+                  ldst = lptr_dust_a_amode
+                  lncl = lptr_nacl_a_amode
+            end if
             !> Load aerosol state [kg m-3]
             if (lptr_so4_a_amode(naermode) > 0) aero_state_for_camp%qso4(naermode) = q(1,1,lptr_so4_a_amode(naermode)) * to_kgperm3
             if (lptr_pom_a_amode(naermode) > 0) aero_state_for_camp%qpom(naermode) = q(1,1,lptr_pom_a_amode(naermode)) * to_kgperm3
@@ -1404,6 +1411,7 @@ main_time_loop: &
                   aero_state_for_camp%qdst(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_dust_a_amode(naermode)-loffset)
             if (lptr_nacl_a_amode(naermode) > 0) vmr(1,1,lptr_nacl_a_amode(naermode)-loffset) = &
                   aero_state_for_camp%qncl(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_nacl_a_amode(naermode)-loffset)
+            qaerwat(1,1,naermode) = aero_state_for_camp%qaerwat(naermode) / to_kgperm3
             end do
                                           
 #else

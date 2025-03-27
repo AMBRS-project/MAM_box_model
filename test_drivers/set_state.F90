@@ -42,6 +42,7 @@ module mam4_state
         real(kind=r8), allocatable :: vmr(:)
       end type gas_state_t
       integer :: mam_idx_so2g, mam_idx_h2so4g, mam_idx_soag
+      integer, dimension(4) :: lso4, lpom, lsoa, lbc, ldst, lncl
       real(kind=r8) :: to_kgperm3
       logical :: first_step
       !character(len=16), allocatable :: persistent_spec(:)
@@ -73,16 +74,9 @@ module mam4_state
                 type(camp_core_t), pointer :: camp_core
 
                 integer(kind=i_kind) :: idx_SO2, &
-                                        idx_SULRXN, &
-                                        idx_SULF, &
-                                        idx_SOAG
-                integer(kind=i_kind) :: idx_M, &
-                                        idx_H2, &
-                                        idx_N2, &
-                                        idx_O2, &
-                                        idx_CH4, &
+                                        idx_H2SO4, &
+                                        idx_SOAG, &
                                         idx_H2O
-                real(kind=r8) :: weight(2)
 
                 type(chem_spec_data_t), pointer :: chem_spec_data
             
@@ -92,32 +86,17 @@ module mam4_state
                 end if
 
                 idx_SO2 = chem_spec_data%gas_state_id("SO2")
-                idx_SULRXN = chem_spec_data%gas_state_id("SULRXN")
-                idx_SULF = chem_spec_data%gas_state_id("SULF")
+                idx_H2SO4 = chem_spec_data%gas_state_id("H2SO4")
                 idx_SOAG = chem_spec_data%gas_state_id("SOAG")
 
-                idx_M = chem_spec_data%gas_state_id("M")
-                idx_H2 = chem_spec_data%gas_state_id("H2")
-                idx_N2 = chem_spec_data%gas_state_id("N2")
-                idx_O2 = chem_spec_data%gas_state_id("O2")
-                idx_CH4 = chem_spec_data%gas_state_id("CH4")
                 idx_H2O = chem_spec_data%gas_state_id("H2O")
 
                 camp_state%state_var(idx_H2O) = &
                         env_state_rh_to_y(env_state)
 
-                weight = (/ camp_state%state_var(idx_SULF), camp_state%state_var(idx_SULRXN) /) &
-                       / ( camp_state%state_var(idx_SULF) + camp_state%state_var(idx_SULRXN) )
                 camp_state%state_var(idx_SO2) =  gas_state%vmr(mam_idx_so2g)
-                camp_state%state_var(idx_SULF) = weight(1) * gas_state%vmr(mam_idx_h2so4g)
-                camp_state%state_var(idx_SULRXN) = weight(2) * gas_state%vmr(mam_idx_h2so4g)
+                camp_state%state_var(idx_H2SO4) = gas_state%vmr(mam_idx_h2so4g)
                 camp_state%state_var(idx_SOAG) = gas_state%vmr(mam_idx_soag)
-
-                !camp_state%state_var(idx_M) =  1.0e+6_r8
-                !camp_state%state_var(idx_H2) = 0.56_r8
-                !camp_state%state_var(idx_N2) =  0.7808e+6_r8
-                !camp_state%state_var(idx_O2) = 0.2095e+6_r8
-                !camp_state%state_var(idx_CH4) = 1.85_r8
               
               end subroutine gas_state_set_camp_conc
 
@@ -144,8 +123,7 @@ module mam4_state
                 type(camp_core_t), pointer :: camp_core
 
                 integer(kind=i_kind) :: idx_SO2, &
-                                        idx_SULRXN, &
-                                        idx_SULF, &
+                                        idx_H2SO4, &
                                         idx_SOAG
 
                 type(chem_spec_data_t), pointer :: chem_spec_data
@@ -156,13 +134,11 @@ module mam4_state
                 end if
 
                 idx_SO2 = chem_spec_data%gas_state_id("SO2")
-                idx_SULRXN = chem_spec_data%gas_state_id("SULRXN")
-                idx_SULF = chem_spec_data%gas_state_id("SULF")
+                idx_H2SO4 = chem_spec_data%gas_state_id("H2SO4")
                 idx_SOAG = chem_spec_data%gas_state_id("SOAG")
 
                 gas_state%vmr(mam_idx_so2g) = camp_state%state_var(idx_SO2)
-                gas_state%vmr(mam_idx_h2so4g) = camp_state%state_var(idx_SULRXN) &
-                                              + camp_state%state_var(idx_SULF)
+                gas_state%vmr(mam_idx_h2so4g) = camp_state%state_var(idx_H2SO4)
                 gas_state%vmr(mam_idx_soag) = camp_state%state_var(idx_SOAG)
               
               end subroutine gas_state_get_camp_conc
