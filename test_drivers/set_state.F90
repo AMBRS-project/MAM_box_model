@@ -10,8 +10,11 @@ module mam4_state
       use camp_constants
       use camp_chem_spec_data
       use shr_kind_mod, only: r8 => shr_kind_r8
+      use modal_aero_data, only: ntot_amode
 
       implicit none
+
+      public
 
       type env_state_t
         !> Temperature (K).
@@ -23,26 +26,26 @@ module mam4_state
       end type env_state_t
       type aero_state_t
         !> Mass fractions (0-1).
-        real(kind=r8) :: qso4(4)
-        real(kind=r8) :: qpom(4)
-        real(kind=r8) :: qsoa(4)
-        real(kind=r8) :: qbc(4)
-        real(kind=r8) :: qdst(4)
-        real(kind=r8) :: qncl(4)
-        real(kind=r8) :: qaerwat(4)
+        real(kind=r8) :: qso4(ntot_amode)
+        real(kind=r8) :: qpom(ntot_amode)
+        real(kind=r8) :: qsoa(ntot_amode)
+        real(kind=r8) :: qbc(ntot_amode)
+        real(kind=r8) :: qdst(ntot_amode)
+        real(kind=r8) :: qncl(ntot_amode)
+        real(kind=r8) :: qaerwat(ntot_amode)
         !> Geometric mean diameter and standard deviation
-        real(kind=r8) :: GMD(4), GSD(4)
+        real(kind=r8) :: GMD(ntot_amode), GSD(ntot_amode)
         !> Aerosol densities and mass fractions
-        real(kind=r8), allocatable :: dens_aer(:), mf_aer(:)
+        real(kind=r8), allocatable :: mf_aer(:)
         !> Number concentration by mode
-        real(kind=r8) :: numc(4)
+        real(kind=r8) :: numc(ntot_amode)
       end type aero_state_t
       type gas_state_t
         !> Gas mixing ratios.
         real(kind=r8), allocatable :: vmr(:)
       end type gas_state_t
       integer :: mam_idx_so2g, mam_idx_h2so4g, mam_idx_soag
-      integer, dimension(4) :: lso4, lpom, lsoa, lbc, ldst, lncl
+      integer, dimension(ntot_amode) :: lso4, lpom, lsoa, lbc, ldst, lncl
       real(kind=r8) :: to_kgperm3
       logical :: first_step
       !character(len=16), allocatable :: persistent_spec(:)
@@ -64,9 +67,9 @@ module mam4_state
               end subroutine env_state_set_camp_env_state
 
               subroutine gas_state_set_camp_conc(camp_core, &
-                                                 gas_state, &
-                                                 env_state, &
-                                                 camp_state)
+                                                  gas_state, &
+                                                  env_state, &
+                                                  camp_state)
                 
                 type(gas_state_t), intent(inout) :: gas_state
                 type(env_state_t), intent(inout) :: env_state
@@ -116,7 +119,7 @@ module mam4_state
               end function env_state_rh_to_y
 
               subroutine gas_state_get_camp_conc(gas_state, &
-                                                 camp_state, camp_core)
+                                                  camp_state, camp_core)
                 
                 type(gas_state_t), intent(inout) :: gas_state
                 type(camp_state_t), intent(inout) :: camp_state

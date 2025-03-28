@@ -13,7 +13,7 @@ module mam4_camp_interface
     use camp_aero_rep_modal_binned_mass
     use camp_constants
     use camp_util
-    use json_module
+    ! use json_module
     use camp_solver_stats
     use camp_mechanism_data
     use camp_rxn_data
@@ -21,6 +21,8 @@ module mam4_camp_interface
     use camp_rxn_photolysis
 
     implicit none
+
+    public
 
 contains
 
@@ -41,37 +43,36 @@ contains
     type(gas_state_t), intent(inout) :: gas_state
     !> Time step (s)
     real(kind=r8), intent(in) :: del_t
-    integer :: n, i, i_ic
+    integer n, i, i_ic
     character(len=4), parameter :: aero_rep_key = "MAM4"
     character(len=16), parameter :: mode_names(4) = (/ "accumulation    ", &
                                                         "aitken          ", &
                                                         "coarse          ", &
                                                         "primary_carbon  " /)
     real(kind=r8), parameter :: pi = 3.14159265358979323846_r8
-    character(len=255), allocatable :: ic_spec(:)
-    character(len=255), allocatable :: aero_ic_names(:)
-    character(len=255) :: cwd
+    character(len=255), allocatable :: ic_spec(:), aero_ic_names(:)
     character(len=255) :: aero_mode, aero_spec, mode_name, aero_name
     real(kind=r8) :: aero_mass_frac, aero_dens, aero_vol(4), tmpdens(4), rtmpdens(4)
     type(string_t), allocatable :: mech_names(:), aero_names(:)
-    integer(kind=i_kind) :: mode(4)
+    integer :: mode(4)
     class(aero_rep_data_t), pointer :: aero_rep_ptr
     type(aero_rep_modal_binned_mass_t), pointer :: aero_rep_data
     type(aero_rep_update_data_modal_binned_mass_GMD_t) :: update_data_GMD
     type(aero_rep_update_data_modal_binned_mass_GSD_t) :: update_data_GSD
-
     type(mechanism_data_t), pointer :: mechanism
     type(rxn_update_data_emission_t), allocatable :: q_update(:) !> Emissions
     type(rxn_update_data_photolysis_t), allocatable :: j_update(:) !> Photolysis
     real(kind=r8), allocatable :: j(:), q(:), ic(:), aero_mass_fracs(:)
     integer, allocatable :: i_j(:), i_q(:), aero_ids(:)
-    integer :: n_emis, n_phot, i_emis, i_phot, persistent_id, aero_id, gas_id, dummy
+    integer n_emis, n_phot, i_emis, i_phot, persistent_id, aero_id, gas_id, dummy
     class(rxn_data_t), pointer :: rxn
     type(chem_spec_data_t), pointer :: chem_spec_data
     logical :: flag
-
     type(solver_stats_t), target :: solver_stats
-
+    integer, parameter :: gas_kind = 1, &
+                            variable_kind = 1, &
+                            constant_kind = 2, &
+                            tracer_kind = 1
     character(len=255) :: config_key, mech_key
 
     namelist /camp_config/ config_key
@@ -100,8 +101,8 @@ contains
         end select
     end do
 
-    if (n_emis .gt. 0) allocate(q_update(n_emis), i_q(n_emis))
-    if (n_phot .gt. 0) allocate(j_update(n_phot), i_j(n_phot))
+    if (n_emis > 0) allocate(q_update(n_emis), i_q(n_emis))
+    if (n_phot > 0) allocate(j_update(n_phot), i_j(n_phot))
 
     !> Initialize emission and photolysis update objects
     i_emis = 0
@@ -121,7 +122,7 @@ contains
     end do
 
     !> Read emission rates
-    if (n_emis .gt. 0) then
+    if (n_emis > 0) then
         allocate(q(n_emis))
         open(1, file = 'emis_q.dat', status='old')
         do i_emis = 1, n_emis
@@ -131,7 +132,7 @@ contains
     end if
 
     !> Set emission rates
-    if (n_emis .gt. 0) then
+    if (n_emis > 0) then
         do i_emis = 1, n_emis
             rxn => mechanism%get_rxn(i_q(i_emis))
             select type (rxn)
@@ -142,7 +143,7 @@ contains
     end if
 
     !> Read photolysis rates
-    if (n_phot .gt. 0) then
+    if (n_phot > 0) then
         allocate(j(n_phot))
         !open(2, file = 'phot_j.dat', status='old')
         !do i_phot = 1, n_phot
@@ -152,7 +153,7 @@ contains
     end if
 
     !> Set photolysis rates
-    if (n_phot .gt. 0) then
+    if (n_phot > 0) then
         do i_phot = 1, n_phot
             rxn => mechanism%get_rxn(i_j(i_phot))
             select type (rxn)
@@ -186,12 +187,12 @@ contains
             call camp_core%update_data(update_data_GMD)
             call camp_core%update_data(update_data_GSD)
         end do
-        if (n_emis .gt. 0) then
+        if (n_emis > 0) then
             do i_emis = 1, n_emis
                 call camp_core%update_data(q_update(i_emis))
             end do
         end if
-        if (n_phot .gt. 0) then
+        if (n_phot > 0) then
             do i_phot = 1, n_phot
                 call camp_core%update_data(j_update(i_phot))
             end do
@@ -210,8 +211,11 @@ contains
     ! Set the CAMP environmental state.
     call env_state_set_camp_env_state(env_state, camp_state)
 
-    allocate( mech_names(chem_spec_data%size(1,1) + chem_spec_data%size(2,1)), &
-                aero_names( size( aero_rep_ptr%unique_names( tracer_type=1 ) ) ) )
+    allocate( mech_names(chem_spec_data%size(variable_kind,gas_kind) + chem_spec_data%size(constant_kind,gas_kind)), &
+                aero_names( size( aero_rep_ptr%unique_names( tracer_type=tracer_kind ) ) ) )
+
+    mech_names = [chem_spec_data%get_spec_names(variable_kind,gas_kind), chem_spec_data%get_spec_names(constant_kind,gas_kind)]
+    aero_names = aero_rep_ptr%unique_names( tracer_type=tracer_kind )
 
     if ( first_step ) then
     
@@ -220,31 +224,27 @@ contains
         camp_state%state_var = 0.0_r8
         
         allocate( persistent_state(size(camp_state%state_var)), &
-                    ic_spec(chem_spec_data%size(1,1) + chem_spec_data%size(2,1)), &
-                    ic(chem_spec_data%size(1,1) + chem_spec_data%size(2,1)) )
+                    ic_spec(chem_spec_data%size(variable_kind,gas_kind) + chem_spec_data%size(constant_kind,gas_kind)), &
+                    ic(chem_spec_data%size(variable_kind,gas_kind) + chem_spec_data%size(constant_kind,gas_kind)) )
 
         persistent_state = 0.0_r8
 
         !> Load initial gas concentrations
-        mech_names = [chem_spec_data%get_spec_names(1,1), chem_spec_data%get_spec_names(2,1)]
         open(3, file = 'ic.dat', status='old')
         do i_ic = 1, size(mech_names)
             read(3, *) ic_spec(i_ic), ic(i_ic)
-            ! if (chem_spec_data%gas_state_id( trim( ic_spec(i_ic)) ) .gt. 0) then
-            camp_state%state_var( &
-                chem_spec_data%gas_state_id( trim( ic_spec(i_ic)) ) ) = &
-                    ic(i_ic)
+            ! if (chem_spec_data%gas_state_id( trim( ic_spec(i_ic)) ) > 0) then
+            camp_state%state_var( chem_spec_data%gas_state_id( trim( ic_spec(i_ic)) ) ) = ic(i_ic)
             ! end if
         end do
         close(3)
 
         !> Calculate mode volume concentrations for converting mass fractions into mass concentrations
-        aero_vol = (pi/6.0_r8) * aero_state%numc * aero_state%GMD**3 * exp(4.5_r8 * log(aero_state%GSD) * log(aero_state%GSD))
+        aero_vol = (pi/6.0_r8) * aero_state%numc * aero_state%GMD**3 * exp(4.5_r8 * log(aero_state%GSD)**2)
         rtmpdens = 0.0_r8
 
         !> Read initial aerosol mass fractions, map to mechanism species, and convert to mass concentrations
-        ! call getcwd(cwd)
-        aero_names = aero_rep_ptr%unique_names( tracer_type=1 )
+
         allocate( aero_ids( size( aero_names ) ), aero_state%mf_aer( size( aero_names ) ), aero_ic_names( size( aero_names ) ) )
         open(4, file = 'aero_mass_fracs.dat', status='old')
         do i_ic = 1, size(aero_names)
@@ -253,11 +253,11 @@ contains
                 aero_id = aero_rep_ptr%spec_state_id( trim(aero_names(i)%string) )
                 mode_name = mode_extract( trim(aero_names(i)%string), '.' )
                 aero_name = aero_rep_ptr%spec_name( trim(aero_names(i)%string) )
-                if ( trim(mode_name) .eq. trim(aero_mode) .and. trim(aero_name) .eq. trim(aero_spec) ) then
+                if ( trim(mode_name) == trim(aero_mode) .and. trim(aero_name) == trim(aero_spec) ) then
                     aero_ids(i_ic) = aero_id
                     aero_ic_names(i_ic) = aero_names(i)%string
                     do n = 1, 4
-                        if ( trim(aero_mode) .eq. trim(mode_names(n)) ) then
+                        if ( trim(aero_mode) == trim(mode_names(n)) ) then
                             !> Harmonic mean particulate density, reciprocal
                             rtmpdens(n) = rtmpdens(n) + aero_mass_frac / aero_dens
                             exit
@@ -275,7 +275,7 @@ contains
         do i = 1, size(aero_names)
             mode_name = mode_extract( trim(aero_ic_names(i)), '.' )
             do n = 1, 4
-                if ( trim(mode_name) .eq. trim(mode_names(n)) ) then
+                if ( trim(mode_name) == trim(mode_names(n)) ) then
                     camp_state%state_var( aero_ids(i) ) = aero_vol(n) * tmpdens(n) * aero_state%mf_aer(i)
                     ! write(*,*) trim(aero_ic_names(i)), camp_state%state_var( aero_ids(i) )
                     exit
@@ -286,7 +286,7 @@ contains
         call gas_state_set_camp_conc(camp_core, gas_state, env_state, camp_state)
         call mam4_camp_interface_set_camp_aerosol(aero_state, camp_core, camp_state, aero_rep_ptr)
 
-        deallocate( aero_ids, aero_ic_names, ic, ic_spec )
+        deallocate( aero_ids, aero_ic_names, ic, ic_spec, aero_state%mf_aer )
         
     else
 
@@ -297,18 +297,20 @@ contains
         call mam4_camp_interface_set_camp_aerosol(aero_state, camp_core, camp_state, aero_rep_ptr)
             
     end if
+
+    ! do i = 1, size(aero_names)
+    !     write(*,*) aero_names(i)%string
+    ! end do
     
     ! Solve the multi-phase chemical system
     call camp_core%solve(camp_state, del_t, solver_stats = solver_stats)
     !call solver_stats%print()
-    if (solver_stats%solver_flag .ne. 0) then
+    if (solver_stats%solver_flag /= 0) then
         write(*,*) 'Solver failed with code ', solver_stats%solver_flag
         stop
     end if
 
-    call mam4_camp_interface_get_camp_aerosol(aero_state, &
-                                            camp_core, camp_state, aero_rep_ptr)
-
+    call mam4_camp_interface_get_camp_aerosol(aero_state, camp_core, camp_state, aero_rep_ptr)
     ! Update the MAM4 gas-phase state
     call gas_state_get_camp_conc(gas_state, camp_state, camp_core)
 
@@ -316,8 +318,8 @@ contains
     persistent_state = camp_state%state_var
 
     deallocate( camp_core, camp_state )
-    if ( n_phot .gt. 0 ) deallocate( j_update, j, i_j )
-    if ( n_emis .gt. 0 ) deallocate( q_update, q, i_q )
+    if ( n_phot > 0 ) deallocate( j_update, j, i_j )
+    if ( n_emis > 0 ) deallocate( q_update, q, i_q )
     deallocate( mech_names, aero_names )
 
     end subroutine mam4_camp_interface_solve
@@ -337,12 +339,13 @@ contains
     type(chem_spec_data_t), pointer :: chem_spec_data
     class(aero_rep_data_t), pointer :: aero_rep_data
     type(string_t), allocatable :: names(:)
-    integer :: i, id, mode_id
+    integer i, id, mode_id
     character(len=255) :: spec, mode_name
     logical :: mode_flag
+    integer, parameter :: tracer_kind = 1
 
-    allocate( names(size(aero_rep_data%unique_names( tracer_type=1 ))) )
-    names = aero_rep_data%unique_names( tracer_type=1 )
+    allocate( names(size(aero_rep_data%unique_names( tracer_type=tracer_kind ))) )
+    names = aero_rep_data%unique_names( tracer_type=tracer_kind )
 
     do i = 1, size(names)
         select type (aero_rep_data)
@@ -351,27 +354,27 @@ contains
                 spec = aero_rep_data%spec_name( trim(names(i)%string) )
                 mode_name = mode_extract( trim(names(i)%string), '.' )
                 mode_flag = aero_rep_data%get_section_id( trim(mode_name), mode_id )             
-        end select
         if (.not.mode_flag) then
             write(*,*) 'Mode not found'
             stop
-        end if
-        select case( trim(spec) )
-            case('SO4')
-                if (lso4(mode_id) > 0) camp_state%state_var( id ) = aero_state%qso4(mode_id)
-                ! write(*,*) trim(mode_name)//'.'//trim(spec), camp_state%state_var(id)
-            case('POM')
-                if (lpom(mode_id) > 0) camp_state%state_var( id ) = aero_state%qpom(mode_id)
-            case('SOA')
-                if (lsoa(mode_id) > 0) camp_state%state_var( id ) = aero_state%qsoa(mode_id)
-            case('BC')
-                if (lbc(mode_id) > 0) camp_state%state_var( id ) = aero_state%qbc(mode_id)
-            case('DST')
-                if (ldst(mode_id) > 0) camp_state%state_var( id ) = aero_state%qdst(mode_id)
-            case('NCL')
-                if (lncl(mode_id) > 0) camp_state%state_var( id ) = aero_state%qncl(mode_id)
-            case('H2O_aq')
-                camp_state%state_var( id ) = aero_state%qaerwat(mode_id)
+        end if        
+            select case( trim(spec) )
+                case('SO4')
+                    if (lso4(mode_id) > 0) camp_state%state_var( id ) = aero_state%qso4(mode_id)
+                    ! write(*,*) trim(mode_name)//'.'//trim(spec), camp_state%state_var(id)
+                case('POM')
+                    if (lpom(mode_id) > 0) camp_state%state_var( id ) = aero_state%qpom(mode_id)
+                case('SOA')
+                    if (lsoa(mode_id) > 0) camp_state%state_var( id ) = aero_state%qsoa(mode_id)
+                case('BC')
+                    if (lbc(mode_id) > 0) camp_state%state_var( id ) = aero_state%qbc(mode_id)
+                case('DST')
+                    if (ldst(mode_id) > 0) camp_state%state_var( id ) = aero_state%qdst(mode_id)
+                case('NCL')
+                    if (lncl(mode_id) > 0) camp_state%state_var( id ) = aero_state%qncl(mode_id)
+                case('H2O_aq')
+                    camp_state%state_var( id ) = aero_state%qaerwat(mode_id)
+            end select
         end select
     end do
 
@@ -394,12 +397,13 @@ contains
     type(chem_spec_data_t), pointer :: chem_spec_data
     class(aero_rep_data_t), pointer :: aero_rep_data
     type(string_t), allocatable :: names(:)
-    integer :: i, id, mode_id
+    integer i, id, mode_id
     character(len=255) :: spec, mode_name
     logical :: mode_flag
+    integer, parameter :: tracer_kind = 1
 
-    allocate(names(size(aero_rep_data%unique_names(tracer_type=1))))
-    names = aero_rep_data%unique_names(tracer_type=1)
+    allocate(names(size(aero_rep_data%unique_names(tracer_type=tracer_kind))))
+    names = aero_rep_data%unique_names(tracer_type=tracer_kind)
 
     do i = 1, size(names)
         ! write(*,*) names(i)%string
@@ -409,28 +413,28 @@ contains
                 spec = aero_rep_data%spec_name( trim(names(i)%string) )
                 mode_name = mode_extract( trim(names(i)%string), '.' )
                 mode_flag = aero_rep_data%get_section_id( trim(mode_name), mode_id )
-        end select
         if (.not.mode_flag) then
             write(*,*) 'Mode not found'
             stop
         end if
-        select case( trim(spec) )
-            case('SO4')
-                if (lso4(mode_id) > 0) aero_state%qso4(mode_id) = camp_state%state_var( id )
-                ! write(*,*) trim(mode_name)//'.'//trim(spec), aero_state%qso4(mode_id)
-            case('POM')
-                if (lpom(mode_id) > 0) aero_state%qpom(mode_id) = camp_state%state_var( id )
-            case('SOA')
-                if (lsoa(mode_id) > 0) aero_state%qsoa(mode_id) = camp_state%state_var( id )
-            case('BC')
-                if (lbc(mode_id) > 0) aero_state%qbc(mode_id) = camp_state%state_var( id )
-            case('DST')
-                if (ldst(mode_id) > 0) aero_state%qdst(mode_id) = camp_state%state_var( id )
-            case('NCL')
-                if (lncl(mode_id) > 0) aero_state%qncl(mode_id) = camp_state%state_var( id )
-            case('H2O_aq')
-                aero_state%qaerwat(mode_id) = camp_state%state_var( id )
-        end select
+            select case( trim(spec) )
+                case('SO4')
+                    if (lso4(mode_id) > 0) aero_state%qso4(mode_id) = camp_state%state_var( id )
+                    ! write(*,*) trim(mode_name)//'.'//trim(spec), aero_state%qso4(mode_id)
+                case('POM')
+                    if (lpom(mode_id) > 0) aero_state%qpom(mode_id) = camp_state%state_var( id )
+                case('SOA')
+                    if (lsoa(mode_id) > 0) aero_state%qsoa(mode_id) = camp_state%state_var( id )
+                case('BC')
+                    if (lbc(mode_id) > 0) aero_state%qbc(mode_id) = camp_state%state_var( id )
+                case('DST')
+                    if (ldst(mode_id) > 0) aero_state%qdst(mode_id) = camp_state%state_var( id )
+                case('NCL')
+                    if (lncl(mode_id) > 0) aero_state%qncl(mode_id) = camp_state%state_var( id )
+                case('H2O_aq')
+                    aero_state%qaerwat(mode_id) = camp_state%state_var( id )
+            end select
+        end select 
     end do
     
     deallocate(names)
@@ -442,11 +446,11 @@ contains
         !> name pattern.
 
         character(len=*) :: str, sep
-        integer :: i, char_count
+        integer i, char_count
 
         char_count = 0
         do i = 1, len(str)
-            if (str(i:i) .eq. sep) exit
+            if (str(i:i) == sep) exit
             char_count = char_count + 1
         end do
 
