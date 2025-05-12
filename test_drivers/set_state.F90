@@ -32,6 +32,7 @@ module mam4_state
         real(kind=r8) :: qbc(ntot_amode)
         real(kind=r8) :: qdst(ntot_amode)
         real(kind=r8) :: qncl(ntot_amode)
+        real(kind=r8) :: qmom(ntot_amode)
         real(kind=r8) :: qaerwat(ntot_amode)
         !> Geometric mean diameter and standard deviation
         real(kind=r8) :: GMD(ntot_amode), GSD(ntot_amode)
@@ -45,7 +46,7 @@ module mam4_state
         real(kind=r8), allocatable :: vmr(:)
       end type gas_state_t
       integer :: mam_idx_so2g, mam_idx_h2so4g, mam_idx_soag
-      integer, dimension(ntot_amode) :: lso4, lpom, lsoa, lbc, ldst, lncl
+      integer, dimension(ntot_amode) :: lso4, lpom, lsoa, lbc, ldst, lncl, lmom
       real(kind=r8) :: to_kgperm3
       logical :: first_step
       !character(len=16), allocatable :: persistent_spec(:)

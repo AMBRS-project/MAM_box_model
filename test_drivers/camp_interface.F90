@@ -121,39 +121,26 @@ contains
         end select
     end do
 
-    !> Read emission rates
-    if (n_emis > 0) then
-        allocate(q(n_emis))
-        open(1, file = 'emis_q.dat', status='old')
-        do i_emis = 1, n_emis
-            read(1, *) dummy, q(i_emis)
-        end do
-        close(1)
-    end if
-
     !> Set emission rates
     if (n_emis > 0) then
+        allocate(q(n_emis))
         do i_emis = 1, n_emis
             rxn => mechanism%get_rxn(i_q(i_emis))
             select type (rxn)
                 type is (rxn_emission_t)
+                    flag = rxn%property_set%get_real('base rate', q(i_emis))
+                    if ( .not.flag ) then
+                        write(*,*) 'Emission rate not found'
+                        stop
+                    end if
                     call q_update(i_emis)%set_rate(q(i_emis))
             end select
         end do
     end if
 
-    !> Read photolysis rates
-    if (n_phot > 0) then
-        allocate(j(n_phot))
-        !open(2, file = 'phot_j.dat', status='old')
-        !do i_phot = 1, n_phot
-            !read(2, *) dummy, j(i_phot)
-        !end do
-        !close(2)
-    end if
-
     !> Set photolysis rates
     if (n_phot > 0) then
+        allocate(j(n_phot))
         do i_phot = 1, n_phot
             rxn => mechanism%get_rxn(i_j(i_phot))
             select type (rxn)
@@ -372,6 +359,8 @@ contains
                     if (ldst(mode_id) > 0) camp_state%state_var( id ) = aero_state%qdst(mode_id)
                 case('NCL')
                     if (lncl(mode_id) > 0) camp_state%state_var( id ) = aero_state%qncl(mode_id)
+                case('MOM')
+                    if (lmom(mode_id) > 0) camp_state%state_var( id ) = aero_state%qmom(mode_id)
                 case('H2O_aq')
                     camp_state%state_var( id ) = aero_state%qaerwat(mode_id)
             end select
@@ -431,6 +420,8 @@ contains
                     if (ldst(mode_id) > 0) aero_state%qdst(mode_id) = camp_state%state_var( id )
                 case('NCL')
                     if (lncl(mode_id) > 0) aero_state%qncl(mode_id) = camp_state%state_var( id )
+                case('MOM')
+                    if (lmom(mode_id) > 0) aero_state%qmom(mode_id) = camp_state%state_var( id )
                 case('H2O_aq')
                     aero_state%qaerwat(mode_id) = camp_state%state_var( id )
             end select

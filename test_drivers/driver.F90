@@ -1373,6 +1373,7 @@ do naermode = 1, ntot_amode
             lbc = lptr_bc_a_amode
             ldst = lptr_dust_a_amode
             lncl = lptr_nacl_a_amode
+            lmom = lptr_mom_a_amode
       end if
       !> Load aerosol state [kg m-3]
       if (lptr_so4_a_amode(naermode) > 0) aero_state_for_camp%qso4(naermode) = q(1,1,lptr_so4_a_amode(naermode)) * to_kgperm3
@@ -1381,6 +1382,7 @@ do naermode = 1, ntot_amode
       if (lptr_bc_a_amode(naermode) > 0) aero_state_for_camp%qbc(naermode) = q(1,1,lptr_bc_a_amode(naermode)) * to_kgperm3
       if (lptr_dust_a_amode(naermode) > 0) aero_state_for_camp%qdst(naermode) = q(1,1,lptr_dust_a_amode(naermode)) * to_kgperm3
       if (lptr_nacl_a_amode(naermode) > 0) aero_state_for_camp%qncl(naermode) = q(1,1,lptr_nacl_a_amode(naermode)) * to_kgperm3
+      if (lptr_mom_a_amode(naermode) > 0) aero_state_for_camp%qmom(naermode) = q(1,1,lptr_mom_a_amode(naermode)) * to_kgperm3
       aero_state_for_camp%qaerwat(naermode) = qaerwat(1,1,naermode) * to_kgperm3
       aero_state_for_camp%GMD(naermode) = dgnum_amode(naermode)
       aero_state_for_camp%GSD(naermode) = sigmag_amode(naermode)
@@ -1412,6 +1414,8 @@ do naermode = 1, ntot_amode
             aero_state_for_camp%qdst(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_dust_a_amode(naermode)-loffset)
       if (lptr_nacl_a_amode(naermode) > 0) vmr(1,1,lptr_nacl_a_amode(naermode)-loffset) = &
             aero_state_for_camp%qncl(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_nacl_a_amode(naermode)-loffset)
+      if (lptr_mom_a_amode(naermode) > 0) vmr(1,1,lptr_mom_a_amode(naermode)-loffset) = &
+            aero_state_for_camp%qmom(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_mom_a_amode(naermode)-loffset)
       qaerwat(1,1,naermode) = aero_state_for_camp%qaerwat(naermode) / to_kgperm3
 end do
                                     
