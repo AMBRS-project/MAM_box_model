@@ -19,6 +19,7 @@ module mam4_camp_interface
     use camp_rxn_data
     use camp_rxn_emission
     use camp_rxn_photolysis
+    use camp_rxn_first_order_loss
 
     implicit none
 
@@ -62,9 +63,11 @@ contains
     type(mechanism_data_t), pointer :: mechanism
     type(rxn_update_data_emission_t), allocatable :: q_update(:) !> Emissions
     type(rxn_update_data_photolysis_t), allocatable :: j_update(:) !> Photolysis
-    real(kind=r8), allocatable :: j(:), q(:), ic(:), aero_mass_fracs(:)
-    integer, allocatable :: i_j(:), i_q(:), aero_ids(:)
+    type(rxn_update_data_first_order_loss_t), allocatable :: loss_update(:) !> Loss
+    real(kind=r8), allocatable :: j(:), q(:), loss(:), ic(:), aero_mass_fracs(:)
+    integer, allocatable :: i_j(:), i_q(:), i_l(:), aero_ids(:)
     integer n_emis, n_phot, i_emis, i_phot, persistent_id, aero_id, gas_id, dummy
+    integer n_loss, i_loss
     class(rxn_data_t), pointer :: rxn
     type(chem_spec_data_t), pointer :: chem_spec_data
     logical :: flag
@@ -86,9 +89,10 @@ contains
     camp_core => camp_core_t( trim(config_key) )
     call camp_core%initialize()
 
-    !> Count emission and photolysis reactions
+    !> Count emission, photolysis, and loss reactions
     n_emis = 0
     n_phot = 0
+    n_loss = 0
 
     call assert(260845179, camp_core%get_mechanism( trim(mech_key), mechanism ))
     do i = 1, mechanism%size()
@@ -98,15 +102,19 @@ contains
                 n_phot = n_phot + 1
             type is (rxn_emission_t)
                 n_emis = n_emis + 1
+            type is (rxn_first_order_loss_t)
+                n_loss = n_loss + 1
         end select
     end do
 
     if (n_emis > 0) allocate(q_update(n_emis), i_q(n_emis))
     if (n_phot > 0) allocate(j_update(n_phot), i_j(n_phot))
+    if (n_loss > 0) allocate(loss_update(n_loss), i_l(n_loss))
 
     !> Initialize emission and photolysis update objects
     i_emis = 0
     i_phot = 0
+    i_loss = 0
     do i = 1, mechanism%size()
         rxn => mechanism%get_rxn(i)
         select type (rxn)
@@ -118,6 +126,10 @@ contains
                 i_emis = i_emis + 1
                 i_q(i_emis) = i
                 call camp_core%initialize_update_object(rxn, q_update(i_emis))
+            type is (rxn_first_order_loss_t)
+                i_loss = i_loss + 1
+                i_l(i_loss) = i
+                call camp_core%initialize_update_object(rxn, loss_update(i_loss))
         end select
     end do
 
@@ -151,6 +163,23 @@ contains
                         stop
                     end if
                     call j_update(i_phot)%set_rate(j(i_phot))
+            end select
+        end do
+    end if
+
+    !> Set loss rates
+    if (n_loss > 0) then
+        allocate(loss(n_loss))
+        do i_loss = 1, n_loss
+            rxn => mechanism%get_rxn(i_l(i_loss))
+            select type (rxn)
+                type is (rxn_first_order_loss_t)
+                    flag = rxn%property_set%get_real('base rate', loss(i_loss))
+                    if ( .not.flag ) then
+                        write(*,*) 'Loss rate not found'
+                        stop
+                    end if
+                    call loss_update(i_loss)%set_rate(loss(i_loss))
             end select
         end do
     end if

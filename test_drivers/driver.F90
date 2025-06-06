@@ -811,7 +811,11 @@ subroutine cambox_do_run( &
 #endif
 
 use chem_mods, only: adv_mass, gas_pcnst, imozart
+#ifdef MAM4_USE_CAMP
+use physconst, only: mwdry, pi
+#else
 use physconst, only: mwdry
+#endif
 use physics_types, only: physics_state, physics_ptend
 use physics_buffer, only: physics_buffer_desc, pbuf_get_chunk
 
@@ -953,6 +957,19 @@ real(r8), dimension(0:nstop)            :: qtend_cond_aging_h2so4, &
 type(env_state_t) :: env_state_for_camp
 type(gas_state_t) :: gas_state_for_camp
 type(aero_state_t) :: aero_state_for_camp
+
+real(r8) :: e_soa1, e_soa2, e_soa3, e_soa4, soa_loss, mode_loss
+real(r8) :: mode_vol(ntot_amode), all_vol
+
+!> Apply emissions and/or loss
+namelist /mam_emis/ e_soa1, e_soa2, e_soa3, e_soa4
+namelist /mam_loss/ soa_loss
+
+open(42, file='camp_nml', status='old')
+      read(42, mam_emis)
+      read(42, mam_loss)
+close(42)
+
 #endif
 !
 ! output comparison results
@@ -1196,6 +1213,8 @@ aero_state_for_camp%qsoa = 0.0_r8
 aero_state_for_camp%qbc = 0.0_r8
 aero_state_for_camp%qdst = 0.0_r8
 aero_state_for_camp%qncl = 0.0_r8
+aero_state_for_camp%qmom = 0.0_r8
+aero_state_for_camp%qaerwat = 0.0_r8
 #endif
 
 main_time_loop: &
@@ -1204,6 +1223,44 @@ istep = nstep
 if (nstep == 1) tnew = 0.0_r8
 told = tnew
 tnew = told + deltat
+
+#ifdef MAM4_USE_CAMP
+
+if (first_step) then
+      lso4 = lptr_so4_a_amode
+      lpom = lptr_pom_a_amode
+      lsoa = lptr_soa_a_amode
+      lbc = lptr_bc_a_amode
+      ldst = lptr_dust_a_amode
+      lncl = lptr_nacl_a_amode
+      lmom = lptr_mom_a_amode
+end if
+
+all_vol = 0.0_r8
+do naermode = 1, ntot_amode
+      mode_vol(naermode) = q(1,1,numptr_amode(naermode)) * &
+                              (dgncur_a(1,1,naermode)**3) * &
+                              (pi/6.0_r8) * exp(4.5_r8*log(sigmag_amode(naermode))**2)
+      all_vol = all_vol + mode_vol(naermode)
+end do
+
+do naermode = 1, ntot_amode
+      if (lsoa(naermode) > 0) then
+            if (naermode .eq. 1) q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) + deltat * e_soa1 / to_kgperm3
+            if (naermode .eq. 2) q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) + deltat * e_soa2 / to_kgperm3
+            if (naermode .eq. 3) q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) + deltat * e_soa3 / to_kgperm3
+            if (naermode .eq. 4) q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) + deltat * e_soa4 / to_kgperm3
+
+            print *, 'vol ratio', mode_vol(naermode) / all_vol
+
+            mode_loss = soa_loss * mode_vol(naermode) / all_vol
+            q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) * (1 - deltat * mode_loss)
+
+            q(1,1,lsoa(naermode)) = max(q(1,1,lsoa(naermode)), 0.0_r8)
+      end if
+end do
+
+#endif
 
 write(lun_outfld,'(/a,i5,2f10.3)') 'istep, told, tnew (h) = ', &
       istep, told/3600.0_r8, tnew/3600.0_r8
@@ -1366,15 +1423,6 @@ if (mdo_gaschem > 0) then
 ! CAMP chem
 ! 
 do naermode = 1, ntot_amode
-      if (first_step) then
-            lso4 = lptr_so4_a_amode
-            lpom = lptr_pom_a_amode
-            lsoa = lptr_soa_a_amode
-            lbc = lptr_bc_a_amode
-            ldst = lptr_dust_a_amode
-            lncl = lptr_nacl_a_amode
-            lmom = lptr_mom_a_amode
-      end if
       !> Load aerosol state [kg m-3]
       if (lptr_so4_a_amode(naermode) > 0) aero_state_for_camp%qso4(naermode) = q(1,1,lptr_so4_a_amode(naermode)) * to_kgperm3
       if (lptr_pom_a_amode(naermode) > 0) aero_state_for_camp%qpom(naermode) = q(1,1,lptr_pom_a_amode(naermode)) * to_kgperm3
@@ -1384,7 +1432,7 @@ do naermode = 1, ntot_amode
       if (lptr_nacl_a_amode(naermode) > 0) aero_state_for_camp%qncl(naermode) = q(1,1,lptr_nacl_a_amode(naermode)) * to_kgperm3
       if (lptr_mom_a_amode(naermode) > 0) aero_state_for_camp%qmom(naermode) = q(1,1,lptr_mom_a_amode(naermode)) * to_kgperm3
       aero_state_for_camp%qaerwat(naermode) = qaerwat(1,1,naermode) * to_kgperm3
-      aero_state_for_camp%GMD(naermode) = dgnum_amode(naermode)
+      aero_state_for_camp%GMD(naermode) = dgncur_a(1,1,naermode)
       aero_state_for_camp%GSD(naermode) = sigmag_amode(naermode)
 end do
 
@@ -1401,7 +1449,7 @@ vmr(1,1,:) = 1.0e-6_r8 * gas_state_for_camp%vmr
 deallocate(gas_state_for_camp%vmr)
 
 do naermode = 1, ntot_amode
-      !> Load aerosol state [m3 m-3]
+      !> Load aerosol state [mol mol-1]
       if (lptr_so4_a_amode(naermode) > 0) vmr(1,1,lptr_so4_a_amode(naermode)-loffset) = &
             aero_state_for_camp%qso4(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_so4_a_amode(naermode)-loffset)
       if (lptr_pom_a_amode(naermode) > 0) vmr(1,1,lptr_pom_a_amode(naermode)-loffset) = &
