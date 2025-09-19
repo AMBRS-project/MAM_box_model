@@ -81,7 +81,7 @@ contains
     namelist /camp_config/ config_key
     namelist /camp_mech/ mech_key
 
-    open(0, file='camp_nml', status='old')
+    open(0, file='namelist', status='old')
         read(0, camp_config)
         read(0, camp_mech)
     close(0)

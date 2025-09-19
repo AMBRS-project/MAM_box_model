@@ -18,7 +18,11 @@ use shr_kind_mod, only: r8 => shr_kind_r8
 use abortutils, only: endrun
 use cam_logfile, only: iulog
 use constituents, only: pcnst, cnst_name, cnst_get_ind
+#ifndef MAM4_USE_CAMP
 use modal_aero_data, only: ntot_amode, dgnum_amode, sigmag_amode
+#else
+use modal_aero_data, only: ntot_amode
+#endif
 use ppgrid, only: pcols, pver, begchunk, endchunk
 use netcdf
 #ifdef MAM4_USE_CAMP
@@ -46,6 +50,10 @@ integer :: lptr_bca_a_amode(ntot_amode) = -999888777
 integer :: lptr_poma_a_amode(ntot_amode) = -999888777 
 
 integer :: species_class(pcnst) = -1
+
+#ifdef MAM4_USE_CAMP
+real(r8) :: dgnum_amode(4), sigmag_amode(4)
+#endif
 
 contains
 
@@ -527,12 +535,9 @@ type(aero_state_t) :: aero_state_for_camp
 !
 ! namelist variable
 !
-#ifdef MAM4_USE_CAMP
 integer  :: mam_nstep
 real(r8) :: mam_dt
-#else
-integer  :: mam_dt, mam_nstep
-#endif
+
 real(r8) :: temp, press, RH_CLEA
 real(r8) :: numc1, numc2, numc3, numc4,                     &
             mfso41, mfpom1, mfsoa1, mfbc1, mfdst1, mfncl1,  &
@@ -540,6 +545,10 @@ real(r8) :: numc1, numc2, numc3, numc4,                     &
             mfdst3, mfncl3, mfso43, mfbc3, mfpom3,  mfsoa3, &
             mfpom4, mfbc4,                                  &
             qso2, qh2so4, qsoag
+#ifdef MAM4_USE_CAMP
+real(r8) :: dgnum1, dgnum2, dgnum3, dgnum4, &
+            sigmag1, sigmag2, sigmag3, sigmag4
+#endif
 
 namelist /time_input/ mam_dt, mam_nstep
 namelist /cntl_input/ mdo_gaschem, mdo_gasaerexch, &
@@ -552,11 +561,19 @@ namelist /chem_input/ numc1, numc2, numc3, numc4,          &
             mfpom4, mfbc4, &
             qso2, qh2so4, qsoag
 
+#ifdef MAM4_USE_CAMP
+namelist /size_parameters/ dgnum1, dgnum2, dgnum3, dgnum4, &
+            sigmag1, sigmag2, sigmag3, sigmag4
+#endif
+
 open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
       read (101, time_input)
       read (101, cntl_input)
       read (101, met_input)
       read (101, chem_input)
+#ifdef MAM4_USE_CAMP
+      read (101, size_parameters)
+#endif
 close (101)
 
 ! check if mass fraction is larger than one
@@ -582,12 +599,15 @@ iwrite3x_units_flagaa   = 10
 iwrite4x_heading_flagbb = 1
 
 #ifdef MAM4_USE_CAMP
-
 !> Load environmental state
 env_state_for_camp%temp = temp
 env_state_for_camp%press = press
 env_state_for_camp%RH_CLEA = RH_CLEA
-
+!> Load aerosol state
+aero_state_for_camp%GMD = (/ dgnum1,dgnum2,dgnum3,dgnum4 /)
+aero_state_for_camp%GSD = (/ sigmag1,sigmag2,sigmag3,sigmag4 /)
+dgnum_amode = aero_state_for_camp%GMD
+sigmag_amode = aero_state_for_camp%GSD
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -662,7 +682,9 @@ loffset = imozart-1
 mam_idx_so2g = l_so2g - loffset
 mam_idx_h2so4g = l_h2so4g - loffset
 mam_idx_soag = l_soag - loffset
+
 to_kgperm3 = aircon(1,1) * mwdry
+
 aero_state_for_camp%numc = (/ numc1, numc2, numc3, numc4 /)
 #endif
 
@@ -811,11 +833,7 @@ subroutine cambox_do_run( &
 #endif
 
 use chem_mods, only: adv_mass, gas_pcnst, imozart
-#ifdef MAM4_USE_CAMP
-use physconst, only: mwdry, pi
-#else
 use physconst, only: mwdry
-#endif
 use physics_types, only: physics_state, physics_ptend
 use physics_buffer, only: physics_buffer_desc, pbuf_get_chunk
 
@@ -957,19 +975,6 @@ real(r8), dimension(0:nstop)            :: qtend_cond_aging_h2so4, &
 type(env_state_t) :: env_state_for_camp
 type(gas_state_t) :: gas_state_for_camp
 type(aero_state_t) :: aero_state_for_camp
-
-real(r8) :: e_soa1, e_soa2, e_soa3, e_soa4, soa_loss, mode_loss
-real(r8) :: mode_vol(ntot_amode), all_vol
-
-!> Apply emissions and/or loss
-namelist /mam_emis/ e_soa1, e_soa2, e_soa3, e_soa4
-namelist /mam_loss/ soa_loss
-
-open(42, file='camp_nml', status='old')
-      read(42, mam_emis)
-      read(42, mam_loss)
-close(42)
-
 #endif
 !
 ! output comparison results
@@ -1175,7 +1180,7 @@ do i = 1, ntot_amode
       l                                 = lptr_so4_a_amode(i)
       if  (l .gt. 0) then 
             tmp_so4_aer(nstep,i)          = q(1,1,l)
-            l2                            = l - (imozart-1)
+            l2                            = l - loffset
             qtend_cond_aging_so4(nstep,i) = dvmrdt_cond(1,1,l2)
             qtend_rename_so4(nstep,i)     = dvmrdt_rnam(1,1,l2)
             qtend_newnuc_so4(nstep,i)     = dvmrdt_nnuc(1,1,l2)
@@ -1184,7 +1189,7 @@ do i = 1, ntot_amode
       l                                 = lptr_soa_a_amode(i)
       if  (l .gt. 0) then 
             tmp_soa_aer(nstep,i)          = q(1,1,l)
-            l2                            = l - (imozart-1)
+            l2                            = l - loffset
             qtend_cond_aging_soa(nstep,i) = dvmrdt_cond(1,1,l2)
             qtend_rename_soa(nstep,i)     = dvmrdt_rnam(1,1,l2)
             qtend_newnuc_soa(nstep,i)     = dvmrdt_nnuc(1,1,l2)
@@ -1192,14 +1197,14 @@ do i = 1, ntot_amode
       end if
 end do
 tmp_h2so4(nstep)                     = q(1,1,l_h2so4g)
-l2                                   = l_h2so4g - (imozart-1)
+l2                                   = l_h2so4g - loffset
 qtend_cond_aging_h2so4(nstep)        = dvmrdt_cond(1,1,l2)
 qtend_rename_h2so4(nstep)            = dvmrdt_rnam(1,1,l2)
 qtend_newnuc_h2so4(nstep)            = dvmrdt_nnuc(1,1,l2)
 qtend_coag_h2so4(nstep)              = dvmrdt_coag(1,1,l2)
 
 tmp_soag(nstep)                      = q(1,1,l_soag)
-l2                                   = l_soag - (imozart-1)
+l2                                   = l_soag - loffset
 qtend_cond_aging_soag(nstep)         = dvmrdt_cond(1,1,l2)
 qtend_rename_soag(nstep)             = dvmrdt_rnam(1,1,l2)
 qtend_newnuc_soag(nstep)             = dvmrdt_nnuc(1,1,l2)
@@ -1213,8 +1218,6 @@ aero_state_for_camp%qsoa = 0.0_r8
 aero_state_for_camp%qbc = 0.0_r8
 aero_state_for_camp%qdst = 0.0_r8
 aero_state_for_camp%qncl = 0.0_r8
-aero_state_for_camp%qmom = 0.0_r8
-aero_state_for_camp%qaerwat = 0.0_r8
 #endif
 
 main_time_loop: &
@@ -1223,44 +1226,6 @@ istep = nstep
 if (nstep == 1) tnew = 0.0_r8
 told = tnew
 tnew = told + deltat
-
-#ifdef MAM4_USE_CAMP
-
-if (first_step) then
-      lso4 = lptr_so4_a_amode
-      lpom = lptr_pom_a_amode
-      lsoa = lptr_soa_a_amode
-      lbc = lptr_bc_a_amode
-      ldst = lptr_dust_a_amode
-      lncl = lptr_nacl_a_amode
-      lmom = lptr_mom_a_amode
-end if
-
-all_vol = 0.0_r8
-do naermode = 1, ntot_amode
-      mode_vol(naermode) = q(1,1,numptr_amode(naermode)) * &
-                              (dgncur_a(1,1,naermode)**3) * &
-                              (pi/6.0_r8) * exp(4.5_r8*log(sigmag_amode(naermode))**2)
-      all_vol = all_vol + mode_vol(naermode)
-end do
-
-do naermode = 1, ntot_amode
-      if (lsoa(naermode) > 0) then
-            if (naermode .eq. 1) q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) + deltat * e_soa1 / to_kgperm3
-            if (naermode .eq. 2) q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) + deltat * e_soa2 / to_kgperm3
-            if (naermode .eq. 3) q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) + deltat * e_soa3 / to_kgperm3
-            if (naermode .eq. 4) q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) + deltat * e_soa4 / to_kgperm3
-
-            print *, 'vol ratio', mode_vol(naermode) / all_vol
-
-            mode_loss = soa_loss * mode_vol(naermode) / all_vol
-            q(1,1,lsoa(naermode)) = q(1,1,lsoa(naermode)) * (1 - deltat * mode_loss)
-
-            q(1,1,lsoa(naermode)) = max(q(1,1,lsoa(naermode)), 0.0_r8)
-      end if
-end do
-
-#endif
 
 write(lun_outfld,'(/a,i5,2f10.3)') 'istep, told, tnew (h) = ', &
       istep, told/3600.0_r8, tnew/3600.0_r8
@@ -1423,6 +1388,14 @@ if (mdo_gaschem > 0) then
 ! CAMP chem
 ! 
 do naermode = 1, ntot_amode
+      if (first_step) then
+            lso4 = lptr_so4_a_amode
+            lpom = lptr_pom_a_amode
+            lsoa = lptr_soa_a_amode
+            lbc = lptr_bc_a_amode
+            ldst = lptr_dust_a_amode
+            lncl = lptr_nacl_a_amode
+      end if
       !> Load aerosol state [kg m-3]
       if (lptr_so4_a_amode(naermode) > 0) aero_state_for_camp%qso4(naermode) = q(1,1,lptr_so4_a_amode(naermode)) * to_kgperm3
       if (lptr_pom_a_amode(naermode) > 0) aero_state_for_camp%qpom(naermode) = q(1,1,lptr_pom_a_amode(naermode)) * to_kgperm3
@@ -1430,15 +1403,13 @@ do naermode = 1, ntot_amode
       if (lptr_bc_a_amode(naermode) > 0) aero_state_for_camp%qbc(naermode) = q(1,1,lptr_bc_a_amode(naermode)) * to_kgperm3
       if (lptr_dust_a_amode(naermode) > 0) aero_state_for_camp%qdst(naermode) = q(1,1,lptr_dust_a_amode(naermode)) * to_kgperm3
       if (lptr_nacl_a_amode(naermode) > 0) aero_state_for_camp%qncl(naermode) = q(1,1,lptr_nacl_a_amode(naermode)) * to_kgperm3
-      if (lptr_mom_a_amode(naermode) > 0) aero_state_for_camp%qmom(naermode) = q(1,1,lptr_mom_a_amode(naermode)) * to_kgperm3
       aero_state_for_camp%qaerwat(naermode) = qaerwat(1,1,naermode) * to_kgperm3
-      aero_state_for_camp%GMD(naermode) = dgncur_a(1,1,naermode)
+      aero_state_for_camp%GMD(naermode) = dgnum_amode(naermode)
       aero_state_for_camp%GSD(naermode) = sigmag_amode(naermode)
 end do
 
 !> Load gas state
 allocate(gas_state_for_camp%vmr(gas_pcnst))
-
 gas_state_for_camp%vmr = 1.0e+6_r8 * vmr(1,1,:)
 
 call mam4_camp_interface_solve(env_state_for_camp, &
@@ -1449,7 +1420,7 @@ vmr(1,1,:) = 1.0e-6_r8 * gas_state_for_camp%vmr
 deallocate(gas_state_for_camp%vmr)
 
 do naermode = 1, ntot_amode
-      !> Load aerosol state [mol mol-1]
+      !> Load aerosol state [m3 m-3]?
       if (lptr_so4_a_amode(naermode) > 0) vmr(1,1,lptr_so4_a_amode(naermode)-loffset) = &
             aero_state_for_camp%qso4(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_so4_a_amode(naermode)-loffset)
       if (lptr_pom_a_amode(naermode) > 0) vmr(1,1,lptr_pom_a_amode(naermode)-loffset) = &
@@ -1462,10 +1433,8 @@ do naermode = 1, ntot_amode
             aero_state_for_camp%qdst(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_dust_a_amode(naermode)-loffset)
       if (lptr_nacl_a_amode(naermode) > 0) vmr(1,1,lptr_nacl_a_amode(naermode)-loffset) = &
             aero_state_for_camp%qncl(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_nacl_a_amode(naermode)-loffset)
-      if (lptr_mom_a_amode(naermode) > 0) vmr(1,1,lptr_mom_a_amode(naermode)-loffset) = &
-            aero_state_for_camp%qmom(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_mom_a_amode(naermode)-loffset)
       qaerwat(1,1,naermode) = aero_state_for_camp%qaerwat(naermode) / to_kgperm3
-end do
+      end do
                                     
 #else
 
@@ -1564,7 +1533,7 @@ tmp_dgn_awet(nstep,1:ntot_amode)     = dgncur_awet(1,1,1:ntot_amode)
 do i = 1, ntot_amode
       tmp_num_aer(nstep,i)              = q(1,1,numptr_amode(i))
       l                                 = lptr_so4_a_amode(i)
-      if  (l .gt. 0) then
+      if  (l .gt. 0) then 
             tmp_so4_aer(nstep,i)          = q(1,1,l)
             l2                            = l - loffset
             qtend_cond_aging_so4(nstep,i) = dvmrdt_cond(1,1,l2)
@@ -1597,10 +1566,6 @@ qtend_newnuc_soag(nstep)             = dvmrdt_nnuc(1,1,l2)
 qtend_coag_soag(nstep)               = dvmrdt_coag(1,1,l2)
 
 end do main_time_loop
-
-#ifdef MAM4_USE_CAMP
-if ( mdo_gaschem > 0 ) deallocate( persistent_state )
-#endif
 
 !
 ! Write the data to the file.
