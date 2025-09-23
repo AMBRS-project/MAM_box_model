@@ -18,11 +18,7 @@ use shr_kind_mod, only: r8 => shr_kind_r8
 use abortutils, only: endrun
 use cam_logfile, only: iulog
 use constituents, only: pcnst, cnst_name, cnst_get_ind
-#ifndef MAM4_USE_CAMP
 use modal_aero_data, only: ntot_amode, dgnum_amode, sigmag_amode
-#else
-use modal_aero_data, only: ntot_amode
-#endif
 use ppgrid, only: pcols, pver, begchunk, endchunk
 use netcdf
 #ifdef MAM4_USE_CAMP
@@ -51,9 +47,9 @@ integer :: lptr_poma_a_amode(ntot_amode) = -999888777
 
 integer :: species_class(pcnst) = -1
 
-#ifdef MAM4_USE_CAMP
-real(r8) :: dgnum_amode(4), sigmag_amode(4)
-#endif
+! #ifdef MAM4_USE_CAMP
+! real(r8) :: dgnum_amode(4), sigmag_amode(4)
+! #endif
 
 contains
 
@@ -160,6 +156,12 @@ type(physics_buffer_desc), pointer :: pbuf2d(:,:)
 integer :: l, l2
 integer :: n
 
+#ifdef MAM4_USE_CAMP
+real(r8) :: dgnum1, dgnum2, dgnum3, dgnum4, &
+            sigmag1, sigmag2, sigmag3, sigmag4
+namelist /size_parameters/ dgnum1, dgnum2, dgnum3, dgnum4, &
+      sigmag1, sigmag2, sigmag3, sigmag4
+#endif
 
 #if ( ( defined MODAL_AERO_7MODE ) && ( defined MOSAIC_SPECIES ) )
 n = 60
@@ -416,6 +418,15 @@ write(*,'(/a)') &
       'cambox_init_basics calling modal_aero_wateruptake_init'
 call modal_aero_wateruptake_init( pbuf2d )
 
+#ifdef MAM4_USE_CAMP
+open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
+      read (101, size_parameters)
+close (101)
+
+!> Load aerosol state
+dgnum_amode = (/ dgnum1,dgnum2,dgnum3,dgnum4 /)
+sigmag_amode = (/ sigmag1,sigmag2,sigmag3,sigmag4 /)
+#endif
 
 write(*,'(/a)') 'cambox_init_basics all done'
 
@@ -545,10 +556,10 @@ real(r8) :: numc1, numc2, numc3, numc4,                     &
             mfdst3, mfncl3, mfso43, mfbc3, mfpom3,  mfsoa3, &
             mfpom4, mfbc4,                                  &
             qso2, qh2so4, qsoag
-#ifdef MAM4_USE_CAMP
-real(r8) :: dgnum1, dgnum2, dgnum3, dgnum4, &
-            sigmag1, sigmag2, sigmag3, sigmag4
-#endif
+! #ifdef MAM4_USE_CAMP
+! real(r8) :: dgnum1, dgnum2, dgnum3, dgnum4, &
+!             sigmag1, sigmag2, sigmag3, sigmag4
+! #endif
 
 namelist /time_input/ mam_dt, mam_nstep
 namelist /cntl_input/ mdo_gaschem, mdo_gasaerexch, &
@@ -561,19 +572,19 @@ namelist /chem_input/ numc1, numc2, numc3, numc4,          &
             mfpom4, mfbc4, &
             qso2, qh2so4, qsoag
 
-#ifdef MAM4_USE_CAMP
-namelist /size_parameters/ dgnum1, dgnum2, dgnum3, dgnum4, &
-            sigmag1, sigmag2, sigmag3, sigmag4
-#endif
+! #ifdef MAM4_USE_CAMP
+! namelist /size_parameters/ dgnum1, dgnum2, dgnum3, dgnum4, &
+!             sigmag1, sigmag2, sigmag3, sigmag4
+! #endif
 
 open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
       read (101, time_input)
       read (101, cntl_input)
       read (101, met_input)
       read (101, chem_input)
-#ifdef MAM4_USE_CAMP
-      read (101, size_parameters)
-#endif
+! #ifdef MAM4_USE_CAMP
+!       read (101, size_parameters)
+! #endif
 close (101)
 
 ! check if mass fraction is larger than one
@@ -603,11 +614,6 @@ iwrite4x_heading_flagbb = 1
 env_state_for_camp%temp = temp
 env_state_for_camp%press = press
 env_state_for_camp%RH_CLEA = RH_CLEA
-!> Load aerosol state
-aero_state_for_camp%GMD = (/ dgnum1,dgnum2,dgnum3,dgnum4 /)
-aero_state_for_camp%GSD = (/ sigmag1,sigmag2,sigmag3,sigmag4 /)
-dgnum_amode = aero_state_for_camp%GMD
-sigmag_amode = aero_state_for_camp%GSD
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -686,6 +692,8 @@ mam_idx_soag = l_soag - loffset
 to_kgperm3 = aircon(1,1) * mwdry
 
 aero_state_for_camp%numc = (/ numc1, numc2, numc3, numc4 /)
+aero_state_for_camp%GMD = dgnum_amode
+aero_state_for_camp%GSD = sigmag_amode
 #endif
 
 ! initialize the aerosol/number mixing ratio
@@ -1434,8 +1442,8 @@ do naermode = 1, ntot_amode
       if (lptr_nacl_a_amode(naermode) > 0) vmr(1,1,lptr_nacl_a_amode(naermode)-loffset) = &
             aero_state_for_camp%qncl(naermode) / to_kgperm3 * mwdry / adv_mass(lptr_nacl_a_amode(naermode)-loffset)
       qaerwat(1,1,naermode) = aero_state_for_camp%qaerwat(naermode) / to_kgperm3
-      end do
-                                    
+end do
+
 #else
 
       call gaschem_simple_sub(                       &

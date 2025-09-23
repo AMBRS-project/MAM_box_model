@@ -30,7 +30,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     !> Run the CAMP module for the current MAM4 state
-    subroutine mam4_camp_interface_solve( env_state, aero_state, gas_state, del_t)
+    subroutine mam4_camp_interface_solve( env_state, aero_state, gas_state, del_t )
 
     !> CAMP core
     type(camp_core_t), pointer :: camp_core
@@ -227,92 +227,93 @@ contains
     ! Set the CAMP environmental state.
     call env_state_set_camp_env_state(env_state, camp_state)
 
-    allocate( mech_names(chem_spec_data%size(variable_kind,gas_kind) + chem_spec_data%size(constant_kind,gas_kind)), &
-                aero_names( size( aero_rep_ptr%unique_names( tracer_type=tracer_kind ) ) ) )
+    ! allocate( mech_names(chem_spec_data%size(variable_kind,gas_kind) + chem_spec_data%size(constant_kind,gas_kind)), &
+    !             aero_names( size( aero_rep_ptr%unique_names( tracer_type=tracer_kind ) ) ) )
 
-    mech_names = [chem_spec_data%get_spec_names(variable_kind,gas_kind), chem_spec_data%get_spec_names(constant_kind,gas_kind)]
-    aero_names = aero_rep_ptr%unique_names( tracer_type=tracer_kind )
+    ! mech_names = [chem_spec_data%get_spec_names(variable_kind,gas_kind), chem_spec_data%get_spec_names(constant_kind,gas_kind)]
+    ! aero_names = aero_rep_ptr%unique_names( tracer_type=tracer_kind )
 
-    if ( first_step ) then
+    ! if ( first_step ) then
     
-        first_step = .false.
+    !     first_step = .false.
 
-        camp_state%state_var = 0.0_r8
+    !     camp_state%state_var = 0.0_r8
         
-        allocate( persistent_state(size(camp_state%state_var)), &
-                    ic_spec(chem_spec_data%size(variable_kind,gas_kind) + chem_spec_data%size(constant_kind,gas_kind)), &
-                    ic(chem_spec_data%size(variable_kind,gas_kind) + chem_spec_data%size(constant_kind,gas_kind)) )
+    !     allocate( persistent_state(size(camp_state%state_var)), &
+    !                 ic_spec(chem_spec_data%size(variable_kind,gas_kind) + chem_spec_data%size(constant_kind,gas_kind)), &
+    !                 ic(chem_spec_data%size(variable_kind,gas_kind) + chem_spec_data%size(constant_kind,gas_kind)) )
 
-        persistent_state = 0.0_r8
+    !     persistent_state = 0.0_r8
 
         !> Load initial gas concentrations
-        open(3, file = 'ic.dat', status='old')
-        do i_ic = 1, size(mech_names)
-            read(3, *) ic_spec(i_ic), ic(i_ic)
-            ! if (chem_spec_data%gas_state_id( trim( ic_spec(i_ic)) ) > 0) then
-            camp_state%state_var( chem_spec_data%gas_state_id( trim( ic_spec(i_ic)) ) ) = ic(i_ic)
-            ! end if
-        end do
-        close(3)
+        ! open(3, file = 'ic.dat', status='old')
+        ! do i_ic = 1, size(mech_names)
+        !     read(3, *) ic_spec(i_ic), ic(i_ic)
+        !     ! if (chem_spec_data%gas_state_id( trim( ic_spec(i_ic)) ) > 0) then
+        !     camp_state%state_var( chem_spec_data%gas_state_id( trim( ic_spec(i_ic)) ) ) = ic(i_ic)
+        !     ! end if
+        ! end do
+        ! close(3)
 
         !> Calculate mode volume concentrations for converting mass fractions into mass concentrations
-        aero_vol = (pi/6.0_r8) * aero_state%numc * aero_state%GMD**3 * exp(4.5_r8 * log(aero_state%GSD)**2)
-        rtmpdens = 0.0_r8
+        ! aero_vol = (pi/6.0_r8) * aero_state%numc * aero_state%GMD**3 * exp(4.5_r8 * log(aero_state%GSD)**2)
+        ! rtmpdens = 0.0_r8
 
         !> Read initial aerosol mass fractions, map to mechanism species, and convert to mass concentrations
 
-        allocate( aero_ids( size( aero_names ) ), aero_state%mf_aer( size( aero_names ) ), aero_ic_names( size( aero_names ) ) )
-        open(4, file = 'aero_mass_fracs.dat', status='old')
-        do i_ic = 1, size(aero_names)
-            read(4, *) aero_mode, aero_spec, aero_mass_frac, aero_dens
-            do i = 1, size(aero_names)
-                aero_id = aero_rep_ptr%spec_state_id( trim(aero_names(i)%string) )
-                mode_name = mode_extract( trim(aero_names(i)%string), '.' )
-                aero_name = aero_rep_ptr%spec_name( trim(aero_names(i)%string) )
-                if ( trim(mode_name) == trim(aero_mode) .and. trim(aero_name) == trim(aero_spec) ) then
-                    aero_ids(i_ic) = aero_id
-                    aero_ic_names(i_ic) = aero_names(i)%string
-                    do n = 1, 4
-                        if ( trim(aero_mode) == trim(mode_names(n)) ) then
-                            !> Harmonic mean particulate density, reciprocal
-                            rtmpdens(n) = rtmpdens(n) + aero_mass_frac / aero_dens
-                            exit
-                        end if
-                    end do
-                    exit
-                end if
-            end do
-            aero_state%mf_aer(i_ic) = aero_mass_frac
-        end do
-        close(4)
-        tmpdens = 1.0_r8 / rtmpdens
+        ! allocate( aero_ids( size( aero_names ) ), aero_state%mf_aer( size( aero_names ) ), aero_ic_names( size( aero_names ) ) )
+        ! open(4, file = 'aero_mass_fracs.dat', status='old')
+        ! do i_ic = 1, size(aero_names)
+        !     read(4, *) aero_mode, aero_spec, aero_mass_frac, aero_dens
+        !     do i = 1, size(aero_names)
+        !         aero_id = aero_rep_ptr%spec_state_id( trim(aero_names(i)%string) )
+        !         mode_name = mode_extract( trim(aero_names(i)%string), '.' )
+        !         aero_name = aero_rep_ptr%spec_name( trim(aero_names(i)%string) )
+        !         if ( trim(mode_name) == trim(aero_mode) .and. trim(aero_name) == trim(aero_spec) ) then
+        !             aero_ids(i_ic) = aero_id
+        !             aero_ic_names(i_ic) = aero_names(i)%string
+        !             do n = 1, 4
+        !                 if ( trim(aero_mode) == trim(mode_names(n)) ) then
+        !                     !> Harmonic mean particulate density, reciprocal
+        !                     rtmpdens(n) = rtmpdens(n) + aero_mass_frac / aero_dens
+        !                     exit
+        !                 end if
+        !             end do
+        !             exit
+        !         end if
+        !     end do
+        !     aero_state%mf_aer(i_ic) = aero_mass_frac
+        ! end do
+        ! close(4)
+        ! tmpdens = 1.0_r8 / rtmpdens
 
-        !> Map aerosol mass concentrations to camp state object
-        do i = 1, size(aero_names)
-            mode_name = mode_extract( trim(aero_ic_names(i)), '.' )
-            do n = 1, 4
-                if ( trim(mode_name) == trim(mode_names(n)) ) then
-                    camp_state%state_var( aero_ids(i) ) = aero_vol(n) * tmpdens(n) * aero_state%mf_aer(i)
-                    ! write(*,*) trim(aero_ic_names(i)), camp_state%state_var( aero_ids(i) )
-                    exit
-                end if
-            end do
-        end do
+        ! !> Map aerosol mass concentrations to camp state object
+        ! do i = 1, size(aero_names)
+        !     mode_name = mode_extract( trim(aero_ic_names(i)), '.' )
+        !     do n = 1, 4
+        !         if ( trim(mode_name) == trim(mode_names(n)) ) then
+        !             camp_state%state_var( aero_ids(i) ) = aero_vol(n) * tmpdens(n) * aero_state%mf_aer(i)
+        !             ! write(*,*) trim(aero_ic_names(i)), camp_state%state_var( aero_ids(i) )
+        !             exit
+        !         end if
+        !     end do
+        ! end do
 
-        call gas_state_set_camp_conc(camp_core, gas_state, env_state, camp_state)
-        call mam4_camp_interface_set_camp_aerosol(aero_state, camp_core, camp_state, aero_rep_ptr)
+    !     call gas_state_set_camp_conc(camp_core, gas_state, env_state, camp_state)
+    !     call mam4_camp_interface_set_camp_aerosol(aero_state, camp_core, camp_state, aero_rep_ptr)
 
-        deallocate( aero_ids, aero_ic_names, ic, ic_spec, aero_state%mf_aer )
+    !     ! deallocate( aero_ids, aero_ic_names, ic, ic_spec, aero_state%mf_aer )
         
-    else
+    ! else
 
         !> Load persistent CAMP state
-        camp_state%state_var = persistent_state
+        ! camp_state%state_var = persistent_state
+    if ( allocated(persistent_state) ) camp_state%state_var = persistent_state
 
-        call gas_state_set_camp_conc(camp_core, gas_state, env_state, camp_state)
-        call mam4_camp_interface_set_camp_aerosol(aero_state, camp_core, camp_state, aero_rep_ptr)
-            
-    end if
+    call gas_state_set_camp_conc(camp_core, gas_state, env_state, camp_state)
+    call mam4_camp_interface_set_camp_aerosol(aero_state, camp_core, camp_state, aero_rep_ptr)
+
+    ! end if
 
     ! do i = 1, size(aero_names)
     !     write(*,*) aero_names(i)%string
@@ -331,12 +332,13 @@ contains
     call gas_state_get_camp_conc(gas_state, camp_state, camp_core)
 
     !> Set persistent CAMP state
+    if ( .not. allocated(persistent_state) ) allocate( persistent_state(size(camp_state%state_var)) )
     persistent_state = camp_state%state_var
 
     deallocate( camp_core, camp_state )
     if ( n_phot > 0 ) deallocate( j_update, j, i_j )
     if ( n_emis > 0 ) deallocate( q_update, q, i_q )
-    deallocate( mech_names, aero_names )
+    ! deallocate( mech_names, aero_names )
 
     end subroutine mam4_camp_interface_solve
 
