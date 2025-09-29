@@ -156,13 +156,6 @@ type(physics_buffer_desc), pointer :: pbuf2d(:,:)
 integer :: l, l2
 integer :: n
 
-#ifdef MAM4_USE_CAMP
-real(r8) :: dgnum1, dgnum2, dgnum3, dgnum4, &
-            sigmag1, sigmag2, sigmag3, sigmag4
-namelist /size_parameters/ dgnum1, dgnum2, dgnum3, dgnum4, &
-      sigmag1, sigmag2, sigmag3, sigmag4
-#endif
-
 #if ( ( defined MODAL_AERO_7MODE ) && ( defined MOSAIC_SPECIES ) )
 n = 60
 #elif ( defined MODAL_AERO_7MODE ) 
@@ -417,16 +410,6 @@ call modal_aero_initialize( pbuf2d, imozart, species_class )
 write(*,'(/a)') &
       'cambox_init_basics calling modal_aero_wateruptake_init'
 call modal_aero_wateruptake_init( pbuf2d )
-
-#ifdef MAM4_USE_CAMP
-open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
-      read (101, size_parameters)
-close (101)
-
-!> Load aerosol state
-dgnum_amode = (/ dgnum1,dgnum2,dgnum3,dgnum4 /)
-sigmag_amode = (/ sigmag1,sigmag2,sigmag3,sigmag4 /)
-#endif
 
 write(*,'(/a)') 'cambox_init_basics all done'
 
