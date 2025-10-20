@@ -74,8 +74,8 @@ contains
 
     type(solver_stats_t), target :: solver_stats
 
-    // camp_core => camp_core_t("/home/dquevedo/AMBRS/ambrs_mam4_cb6r5_ae7_aq/tests/mam4_config.json")
-    // call camp_core%initialize()
+    ! camp_core => camp_core_t("/home/dquevedo/AMBRS/ambrs_mam4_cb6r5_ae7_aq/tests/mam4_config.json")
+    ! call camp_core%initialize()
     character(len=512) :: cfg
     integer :: nlen, istat
     cfg = 'mam4_config.json'
