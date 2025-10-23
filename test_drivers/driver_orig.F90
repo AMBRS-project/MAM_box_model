@@ -43,29 +43,6 @@
 
       integer :: species_class(pcnst) = -1
 
-! === EMISSIONS OPTION A: module-scope configuration (namelist-filled) =========
-! Number emission per mode  [#/kg-air/s]
-      logical :: emis_enable = .false.
-      real(r8) :: emis_num(ntot_amode) = 0.0_r8
-
-! Mass emission per (species,mode) [kg-aer/kg-air/s]
-      real(r8) :: emis_mass_so4(ntot_amode) = 0.0_r8
-      real(r8) :: emis_mass_nh4(ntot_amode) = 0.0_r8
-      real(r8) :: emis_mass_soa(ntot_amode) = 0.0_r8
-      real(r8) :: emis_mass_pom(ntot_amode) = 0.0_r8
-      real(r8) :: emis_mass_bc(ntot_amode)  = 0.0_r8
-      real(r8) :: emis_mass_ncl(ntot_amode) = 0.0_r8
-      real(r8) :: emis_mass_dst(ntot_amode) = 0.0_r8
-      real(r8) :: emis_mass_mom(ntot_amode) = 0.0_r8
-! Optional MOSAIC species (present only when compiled with MOSAIC_SPECIES)
-#ifdef MOSAIC_SPECIES
-      real(r8) :: emis_mass_no3(ntot_amode) = 0.0_r8
-      real(r8) :: emis_mass_clx(ntot_amode) = 0.0_r8
-      real(r8) :: emis_mass_cax(ntot_amode) = 0.0_r8
-      real(r8) :: emis_mass_co3(ntot_amode) = 0.0_r8
-#endif
-! ==============================================================================
-
       contains
 
 
@@ -539,32 +516,11 @@
                   mfpom4, mfbc4, &
                   qso2, qh2so4, qsoag
 
-! === EMISSIONS OPTION A: add namelist for emissions ============================
-! NOTE: emissions are **tendencies** in mixing-ratio units per second:
-!   emis_num       : [#/kg-air/s] per mode
-!   emis_mass_*(:) : [kg-aer/kg-air/s] per mode
-      namelist /emiss_input/ emis_enable, emis_num,          &
-           emis_mass_so4, emis_mass_nh4, emis_mass_soa,      &
-           emis_mass_pom, emis_mass_bc,  emis_mass_ncl,      &
-           emis_mass_dst, emis_mass_mom
-#ifdef MOSAIC_SPECIES
-      namelist /emiss_mosaic/ emis_mass_no3, emis_mass_clx, emis_mass_cax, emis_mass_co3
-#endif
-! ==============================================================================
-
       open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
           read (101, time_input)
           read (101, cntl_input)
           read (101, met_input)
           read (101, chem_input)
-! === EMISSIONS OPTION A: read emissions namelists (if present) =================
-          read (101, emiss_input, end=100, err=100)
-#ifdef MOSAIC_SPECIES
-          read (101, emiss_mosaic, end=100, err=100)
-#endif
-100   continue
-! ==============================================================================
-
       close (101)
 
       ! check if mass fraction is larger than one
@@ -1130,31 +1086,6 @@ main_time_loop: &
       write(lun_outfld,'(/a,i5,2f10.3)') 'istep, told, tnew (h) = ', &
          istep, told/3600.0_r8, tnew/3600.0_r8
 
-! === EMISSIONS OPTION A: apply number+mass emissions BEFORE physics ============
-      if (emis_enable) then
-         do n = 1, ntot_amode
-            ! number (always present): q = q + emis_num * dt   [#/kg-air]
-            l = numptr_amode(n)
-            if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_num(n) * deltat
-
-            ! species mass per mode (only if that species exists in the compiled config)
-            l = lptr_so4_a_amode(n); if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_so4(n) * deltat
-            l = lptr_nh4_a_amode(n); if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_nh4(n) * deltat
-            l = lptr_soa_a_amode(n); if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_soa(n) * deltat
-            l = lptr_pom_a_amode(n); if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_pom(n) * deltat
-            l = lptr_bc_a_amode(n) ; if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_bc(n)  * deltat
-            l = lptr_nacl_a_amode(n);if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_ncl(n) * deltat
-            l = lptr_dust_a_amode(n);if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_dst(n) * deltat
-            l = lptr_mom_a_amode(n) ;if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_mom(n) * deltat
-#ifdef MOSAIC_SPECIES
-            l = lptr_no3_a_amode(n) ;if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_no3(n) * deltat
-            l = lptr_cl_a_amode(n)  ;if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_clx(n) * deltat
-            l = lptr_ca_a_amode(n)  ;if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_cax(n) * deltat
-            l = lptr_co3_a_amode(n) ;if (l > 0) q(1:ncol,1:pver,l) = q(1:ncol,1:pver,l) + emis_mass_co3(n) * deltat
-#endif
-         end do
-      end if
-! ==============================================================================
 
 !
 ! calcsize

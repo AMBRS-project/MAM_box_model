@@ -1,0 +1,59 @@
+&time_input
+  mam_dt    = 60,     ! [s]
+  mam_nstep = 600,
+/
+
+&cntl_input
+  mdo_gaschem    = 0,
+  mdo_gasaerexch = 1,
+  mdo_rename     = 1,
+  mdo_newnuc     = 1,
+  mdo_coag       = 1,
+/
+
+&met_input
+  temp    = 273.,
+  press   = 1.0e5,
+  RH_CLEA = 0.90,
+/
+
+&chem_input
+  ! initial mode number concentrations [#/m3]
+  numc1 = 1.e8,
+  numc2 = 1.e9,
+  numc3 = 1.e5,
+  numc4 = 2.e8,
+
+  ! Mode-1 mass fractions (sum <= 1.0)
+  mfso41 = 0.30, mfpom1 = 0.10, mfsoa1 = 0.10, mfbc1 = 0.05, mfdst1 = 0.05, mfncl1 = 0.05,
+  ! Mode-2
+  mfso42 = 0.20, mfsoa2 = 0.20, mfncl2 = 0.05,
+  ! Mode-3
+  mfdst3 = 0.50, mfncl3 = 0.10, mfso43 = 0.05, mfbc3 = 0.02, mfpom3 = 0.03, mfsoa3 = 0.10,
+  ! Mode-4
+  mfpom4 = 0.10, mfbc4 = 0.05,
+
+  ! gases (mixing ratios; units per your repo)
+  qso2   = 1.e-4,
+  qh2so4 = 1.e-13,
+  qsoag  = 5.e-10,
+/
+
+&emiss_input
+  emis_enable = 1,
+
+  ! Number emissions per mode [#/kg-air/s], length = ntot_amode
+  ! Here: emit into Aitken (mode 2) only
+  emis_num = 0.0, 1.0e4, 0.0, 0.0,
+
+  ! Mass emissions per mode [kg-aer/kg-air/s] (each array length = ntot_amode)
+  ! Here: emit SO4 into mode-2 only, plus a small POM in mode-4
+  emis_mass_so4 = 0.0, 1.0e-12, 0.0, 0.0,
+  emis_mass_nh4 = 0.0, 0.0,     0.0, 0.0,
+  emis_mass_soa = 0.0, 0.0,     0.0, 0.0,
+  emis_mass_pom = 0.0, 0.0,     0.0, 5.0e-13,
+  emis_mass_bc  = 0.0, 0.0,     0.0, 0.0,
+  emis_mass_ncl = 0.0, 0.0,     0.0, 0.0,
+  emis_mass_dst = 0.0, 0.0,     0.0, 0.0,
+  emis_mass_mom = 0.0, 0.0,     0.0, 0.0,
+/
