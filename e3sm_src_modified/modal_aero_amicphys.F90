@@ -5735,8 +5735,9 @@ dr_so4_monolayers_pcage = n_so4_monolayers_pcage * 4.76e-10
       fcvt_gas(:) = 1.0_r8
 
       vol_molar_gas = 42.88_r8  ! value for h2so4
-      accom_coef_gas = 0.65_r8  ! value for h2so4
-
+      ! accom_coef_gas = 0.65_r8  ! value for h2so4
+      accom_coef_gas = 1.0_r8  ! value for h2so4
+      
       do igas = 1, ngas
          call cnst_get_ind( name_gas(igas), l, .false. )
          if (l < 1 .or. l > pcnst) then
