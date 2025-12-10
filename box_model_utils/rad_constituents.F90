@@ -206,7 +206,6 @@
 
       character(len=120) :: errmsg
 
-#ifdef CUSTOM_SIZE
       real(r8) :: dgnum1, dgnum2, dgnum3, dgnum4, &
          sigmag1, sigmag2, sigmag3, sigmag4
       namelist /size_parameters/ dgnum1, dgnum2, dgnum3, dgnum4, &
@@ -219,7 +218,6 @@
 ! Overwrite default size parameters
       dgnum_amode_rc = (/ dgnum1,dgnum2,dgnum3,dgnum4 /)
       sigmag_amode_rc = (/ sigmag1,sigmag2,sigmag3,sigmag4 /)
-#endif
 
       if (m < 1 .or. m > n_modes) then
          write(errmsg,'(a,i12)') 'rad_cnst_get_mode_props - bad m = ', m
