@@ -21,9 +21,7 @@
       use modal_aero_data, only: ntot_amode
       use ppgrid, only: pcols, pver, begchunk, endchunk
       use netcdf
-#ifdef ENABLE_CAMP
       use mam4_camp
-#endif
 
       implicit none
 
@@ -31,7 +29,7 @@
 
       integer, parameter :: lun_outfld = 90
 
-      integer :: mdo_gaschem, mdo_cloudchem
+      integer :: mdo_gaschem, mdo_cloudchem, mdo_camp_chem
       integer :: mdo_gasaerexch, mdo_rename, mdo_newnuc, mdo_coag
       integer :: mopt_aero_comp, mopt_aero_load, mopt_ait_size
       integer :: mopt_h2so4_uptake
@@ -511,7 +509,7 @@
 
       namelist /time_input/ mam_dt, mam_nstep
       namelist /cntl_input/ mdo_gaschem, mdo_gasaerexch, &
-                            mdo_rename, mdo_newnuc, mdo_coag
+                            mdo_rename, mdo_newnuc, mdo_coag, mdo_camp_chem
       namelist /met_input/ temp, press, RH_CLEA
       namelist /chem_input/ numc1, numc2, numc3, numc4,          &
                   mfso41, mfpom1, mfsoa1, mfbc1, mfdst1, mfncl1, &
@@ -1242,7 +1240,6 @@ main_time_loop: &
 
 ! global avg ~= 13 d = 1.12e6 s, daytime avg ~= 5.6e5, noontime peak ~= 3.7e5
       tau_gaschem_simple = 3.0e5  ! so2 gas-rxn timescale (s)
-#ifndef ENABLE_CAMP
       if (mdo_gaschem > 0) then
          call gaschem_simple_sub(                       &
             lchnk,    ncol,     nstep,               &
@@ -1250,11 +1247,10 @@ main_time_loop: &
             vmr,                tau_gaschem_simple      )
       else
          ! assumed constant gas chemistry production rate (mol/mol)
-         vmr(1:ncol,:,lmz_h2so4g) = vmr(1:ncol,:,lmz_h2so4g) + 1.e-16_r8*deltat
+         if ( mdo_camp_chem == 0 ) vmr(1:ncol,:,lmz_h2so4g) = vmr(1:ncol,:,lmz_h2so4g) + 1.e-16_r8*deltat
       end if
-#else
-      call solve_camp_chemistry( vmr,deltat )
-#endif
+
+      if ( mdo_camp_chem > 0 ) call solve_camp_chemistry( vmr( 1,1,: ),deltat )
 
       h2so4_aft_gaschem(1:ncol,:) = vmr(1:ncol,:,lmz_h2so4g)
 
