@@ -21,7 +21,9 @@
       use modal_aero_data, only: ntot_amode
       use ppgrid, only: pcols, pver, begchunk, endchunk
       use netcdf
-      use mam4_camp
+      use mam4_camp, camp_dgn => dgn, &
+                     camp_aircon => aircon, &
+                     camp_gasaerexch => mdo_gasaerexch
 
       implicit none
 
@@ -59,6 +61,7 @@
          lmassptrcw_amode, nspec_amode, numptrcw_amode, &
          qqcw_get_field
 
+      use rad_constituents, only: dgnum_amode_rc, sigmag_amode_rc
 
       integer, parameter :: ncolxx = min( pcols, 10 )
 
@@ -84,6 +87,19 @@
 
       type(physics_buffer_desc), pointer :: pbuf2d(:,:)
 
+      real(r8) :: dgnum1, dgnum2, dgnum3, dgnum4, &
+                  sigmag1, sigmag2, sigmag3, sigmag4
+
+      namelist /size_parameters/ dgnum1, dgnum2, dgnum3, dgnum4, &
+                                 sigmag1, sigmag2, sigmag3, sigmag4
+
+      open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
+         read (101, size_parameters)
+      close (101)
+
+      ! Overwrite default size parameters
+      dgnum_amode_rc = (/ dgnum1,dgnum2,dgnum3,dgnum4 /)
+      sigmag_amode_rc = (/ sigmag1,sigmag2,sigmag3,sigmag4 /)
 
       ncol = ncolxx
       ncol_for_outfld = ncol
@@ -506,6 +522,9 @@
                   mfdst3, mfncl3, mfso43, mfbc3, mfpom3,  mfsoa3, &
                   mfpom4, mfbc4,                                  &
                   qso2, qh2so4, qsoag
+      ! real(r8) :: dgnum1, dgnum2, dgnum3, dgnum4, &
+      !             sigmag1, sigmag2, sigmag3, sigmag4
+
 
       namelist /time_input/ mam_dt, mam_nstep
       namelist /cntl_input/ mdo_gaschem, mdo_gasaerexch, &
@@ -517,13 +536,20 @@
                   mfdst3, mfncl3, mfso43, mfbc3, mfpom3, mfsoa3, &
                   mfpom4, mfbc4, &
                   qso2, qh2so4, qsoag
+      ! namelist /size_parameters/ dgnum1, dgnum2, dgnum3, dgnum4, &
+      !             sigmag1, sigmag2, sigmag3, sigmag4
 
       open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
           read (101, time_input)
           read (101, cntl_input)
           read (101, met_input)
           read (101, chem_input)
+         !  read (101, size_parameters)
       close (101)
+
+      ! ! Overwrite default size parameters
+      ! dgnum_amode = (/ dgnum1,dgnum2,dgnum3,dgnum4 /)
+      ! sigmag_amode = (/ sigmag1,sigmag2,sigmag3,sigmag4 /)
 
       ! check if mass fraction is larger than one
       if (mfso41+mfpom1+mfsoa1+mfbc1+mfdst1+mfncl1 .gt. 1._r8) then
@@ -736,6 +762,8 @@
       q(:,:,l_so2g)   = qso2
       q(:,:,l_soag)   = qsoag
       q(:,:,l_h2so4g) = qh2so4
+
+      camp_aircon = 1e+3_r8 * aircon( 1,1 )
 
       write(*,'(/a)') 'cambox_init_run all done'
 
@@ -1250,7 +1278,15 @@ main_time_loop: &
          if ( mdo_camp_chem == 0 ) vmr(1:ncol,:,lmz_h2so4g) = vmr(1:ncol,:,lmz_h2so4g) + 1.e-16_r8*deltat
       end if
 
-      if ( mdo_camp_chem > 0 ) call solve_camp_chemistry( vmr( 1,1,: ),deltat )
+!
+! camp_chem
+!
+
+      if ( mdo_camp_chem > 0 ) then
+         camp_dgn = dgncur_a( 1,1,: )
+         camp_gasaerexch = mdo_gasaerexch
+         call solve_camp_chemistry( vmr( 1,1,: ),deltat )
+      end if
 
       h2so4_aft_gaschem(1:ncol,:) = vmr(1:ncol,:,lmz_h2so4g)
 

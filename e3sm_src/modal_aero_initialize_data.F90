@@ -14,6 +14,7 @@ module modal_aero_initialize_data
   public :: modal_aero_register
   public :: modal_aero_initialize
   public :: modal_aero_initialize_q
+  public :: search_list_of_names
 
   logical :: convproc_do_gas, convproc_do_aer 
 contains
@@ -407,7 +408,22 @@ contains
        real(r8), pointer :: qqcw(:,:)
        real(r8), parameter :: huge_r8 = huge(1._r8)
        character(len=*), parameter :: routine='modal_aero_initialize'
+
+      !  real(r8) :: dgnum1, dgnum2, dgnum3, dgnum4, &
+      !       sigmag1, sigmag2, sigmag3, sigmag4
+
        !-----------------------------------------------------------------------
+
+      !  namelist /size_parameters/ dgnum1, dgnum2, dgnum3, dgnum4, &
+      !       sigmag1, sigmag2, sigmag3, sigmag4
+
+      !  open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
+      !       read (101, size_parameters)
+      !  close (101)
+
+      !  ! Overwrite default size parameters
+      !  dgnum_amode_rc = (/ dgnum1,dgnum2,dgnum3,dgnum4 /)
+      !  sigmag_amode_rc = (/ sigmag1,sigmag2,sigmag3,sigmag4 /)
 
        pi = 4._r8*atan(1._r8)    
 
