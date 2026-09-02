@@ -12,7 +12,7 @@
 !
 !-------------------------------------------------------------------------------
 
-      module driver
+   module driver
 
       use shr_kind_mod, only: r8 => shr_kind_r8
       use abortutils, only: endrun
@@ -286,10 +286,10 @@
       adv_mass(:l) = &
       (/     34.013600_r8,     98.078400_r8,     64.064800_r8,     62.132400_r8,     12.011000_r8, &
             115.107340_r8,     12.011000_r8,     12.011000_r8,     12.011000_r8,    135.064039_r8, &
-             58.442468_r8, 250092.672000_r8,      1.007400_r8,    115.107340_r8,     12.011000_r8, &
-             58.442468_r8, 250092.672000_r8,      1.007400_r8,    135.064039_r8,     58.442468_r8, &
+               58.442468_r8, 250092.672000_r8,      1.007400_r8,    115.107340_r8,     12.011000_r8, &
+               58.442468_r8, 250092.672000_r8,      1.007400_r8,    135.064039_r8,     58.442468_r8, &
             115.107340_r8,     12.011000_r8,     12.011000_r8,     12.011000_r8, 250092.672000_r8, &
-              1.007400_r8,     12.011000_r8,     12.011000_r8, 250092.672000_r8,      1.007400_r8 /)
+               1.007400_r8,     12.011000_r8,     12.011000_r8, 250092.672000_r8,      1.007400_r8 /)
 #else
       solsym(:l) = &
       (/ 'H2O2    ', 'H2SO4   ', 'SO2     ', 'DMS     ',             &
@@ -453,9 +453,9 @@
 
       use modal_aero_data
       use modal_aero_amicphys, only: &
-           gaexch_h2so4_uptake_optaa, newnuc_h2so4_conc_optaa, mosaic, &
-           dens_aer, iaer_bc, iaer_pom, iaer_so4, iaer_soa, iaer_ncl, &
-           iaer_mom, iaer_dst
+            gaexch_h2so4_uptake_optaa, newnuc_h2so4_conc_optaa, mosaic, &
+            dens_aer, iaer_bc, iaer_pom, iaer_so4, iaer_soa, iaer_ncl, &
+            iaer_mom, iaer_dst
 
 
       integer,  intent(in   ) :: ncol
@@ -483,9 +483,9 @@
       integer :: l, ll, loffset, lun
       integer :: l_nh3g, l_so2g, l_soag, l_hno3g, l_hclg, l_h2so4g
       integer :: l_num_a1, l_num_a2, l_nh4_a1, l_nh4_a2, &
-                 l_so4_a1, l_so4_a2, l_soa_a1, l_soa_a2
+                  l_so4_a1, l_so4_a2, l_soa_a1, l_soa_a2
       integer :: l_numa, l_so4a, l_nh4a, l_soaa, l_poma, l_bcxa, l_ncla, &
-                 l_dsta, l_no3a, l_clxa, l_caxa, l_co3a, l_moma
+                  l_dsta, l_no3a, l_clxa, l_caxa, l_co3a, l_moma
       integer :: mode123_empty
       integer :: mopt_aero_loadaa, mopt_aero_loadbb
       integer :: n, nacc, nait
@@ -528,7 +528,7 @@
 
       namelist /time_input/ mam_dt, mam_nstep
       namelist /cntl_input/ mdo_gaschem, mdo_gasaerexch, &
-                            mdo_rename, mdo_newnuc, mdo_coag, mdo_camp_chem
+                              mdo_rename, mdo_newnuc, mdo_coag, mdo_camp_chem
       namelist /met_input/ temp, press, RH_CLEA
       namelist /chem_input/ numc1, numc2, numc3, numc4,          &
                   mfso41, mfpom1, mfsoa1, mfbc1, mfdst1, mfncl1, &
@@ -540,10 +540,10 @@
       !             sigmag1, sigmag2, sigmag3, sigmag4
 
       open (UNIT = 101, FILE = 'namelist', STATUS = 'OLD')
-          read (101, time_input)
-          read (101, cntl_input)
-          read (101, met_input)
-          read (101, chem_input)
+            read (101, time_input)
+            read (101, cntl_input)
+            read (101, met_input)
+            read (101, chem_input)
          !  read (101, size_parameters)
       close (101)
 
@@ -553,20 +553,20 @@
 
       ! check if mass fraction is larger than one
       if (mfso41+mfpom1+mfsoa1+mfbc1+mfdst1+mfncl1 .gt. 1._r8) then
-          print *, "The summed mass fraction is > 1 in mode 1"
-          stop
+            print *, "The summed mass fraction is > 1 in mode 1"
+            stop
       end if
       if (mfso42+mfsoa2+mfncl2 .gt. 1._r8) then
-          print *, "The summed mass fraction is > 1 in mode 2"
-          stop
+            print *, "The summed mass fraction is > 1 in mode 2"
+            stop
       end if
       if (mfdst3+mfncl3+mfso43+mfbc3+mfpom3+mfsoa3 .gt. 1._r8) then
-          print *, "The summed mass fraction is > 1 in mode 3"
-          stop
+            print *, "The summed mass fraction is > 1 in mode 3"
+            stop
       end if
       if (mfpom4+mfbc4 .gt. 1._r8) then
-          print *, "The summed mass fraction is > 1 in mode 4"
-          stop
+            print *, "The summed mass fraction is > 1 in mode 4"
+            stop
       end if
 
       iwrite3x_species_flagaa = 1
@@ -585,10 +585,10 @@
 
       gaexch_h2so4_uptake_optaa =  2  ! 1=sequential prod then loss,  2=prod+loss together
       newnuc_h2so4_conc_optaa   =  2  ! controls treatment of h2so4 concentrationin mam_newnuc_1subcol
-                                      !  1 = use avg. value calculated in standard cam5.2.10 and earlier
-                                      !  2 = use avg. value calculated in mam_gasaerexch_1subcol
-                                      ! 11 = use avg. of initial and final values from mam_gasaerexch_1subcol
-                                      ! 12 = use final value from mam_gasaerexch_1subcol
+                                       !  1 = use avg. value calculated in standard cam5.2.10 and earlier
+                                       !  2 = use avg. value calculated in mam_gasaerexch_1subcol
+                                       ! 11 = use avg. of initial and final values from mam_gasaerexch_1subcol
+                                       ! 12 = use final value from mam_gasaerexch_1subcol
       mopt_h2so4_uptake         = 1   ! *** no longer used
 
       mopt_ait_size       = 2
@@ -647,112 +647,112 @@
          do i = 1, ncol
             do  n = 1, ntot_amode
 
-                sx = log( sigmag_amode(n) )
+                  sx = log( sigmag_amode(n) )
 
-                if      (n == 1) then
-                   dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.20e-6_r8 ! m
-                   tmpfsoa      = mfsoa1
-                   tmpfso4      = mfso41
-                   tmpfncl      = mfncl1
-                   tmpfdst      = mfdst1
-                   tmpfpom      = mfpom1
-                   tmpfbcx      = mfbc1
-                   tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
-                                  tmpfncl - tmpfdst - tmpfpom - tmpfbcx
-                else if (n == 2) then
-                   dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.04e-6_r8
-                   tmpfsoa      = mfsoa2
-                   tmpfso4      = mfso42
-                   tmpfncl      = mfncl2
-                   tmpfdst      = 0._r8
-                   tmpfpom      = 0._r8
-                   tmpfbcx      = 0._r8
-                   tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
-                                  tmpfncl - tmpfdst - tmpfpom - tmpfbcx
-                else if (n == 3) then
-                   dgncur_a(i,k,n) = dgnum_amode(n)  ! 2.00e-6_r8
-                   tmpfsoa      = mfsoa3
-                   tmpfso4      = mfso43
-                   tmpfncl      = mfncl3
-                   tmpfdst      = mfdst3
-                   tmpfpom      = mfpom3
-                   tmpfbcx      = mfbc3
-                   tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
-                                  tmpfncl - tmpfdst - tmpfpom - tmpfbcx
-                else if (n == 4) then
-                   dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.08e-6_r8
-                   tmpfsoa      = 0._r8
-                   tmpfso4      = 0._r8
-                   tmpfncl      = 0._r8
-                   tmpfdst      = 0._r8
-                   tmpfpom      = mfpom4
-                   tmpfbcx      = mfbc4
-                   tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
-                                  tmpfncl - tmpfdst - tmpfpom - tmpfbcx
-                end if
-                ! q(i,k,numptr_amode(n)) = #/kg-air
-                if (n == modeptr_aitken) then
-                   q(i,k,numptr_amode(n)) = numc2 / aircon(i,k) / mwdry
-                   l_num_a2 = numptr_amode(n)
-                   l_so4_a2 = lptr_so4_a_amode(n)
-                else if (n == modeptr_accum) then
-                   q(i,k,numptr_amode(n)) = numc1 / aircon(i,k) / mwdry
-                   l_num_a1 = numptr_amode(n)
-                   l_so4_a1 = lptr_so4_a_amode(n)
-                else if (n == modeptr_pcarbon) then
-                   q(i,k,numptr_amode(n)) = numc4 / aircon(i,k) / mwdry
-                else
-                   q(i,k,numptr_amode(n)) = numc3 / aircon(i,k) / mwdry
-                end if
+                  if      (n == 1) then
+                     dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.20e-6_r8 ! m
+                     tmpfsoa      = mfsoa1
+                     tmpfso4      = mfso41
+                     tmpfncl      = mfncl1
+                     tmpfdst      = mfdst1
+                     tmpfpom      = mfpom1
+                     tmpfbcx      = mfbc1
+                     tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
+                                    tmpfncl - tmpfdst - tmpfpom - tmpfbcx
+                  else if (n == 2) then
+                     dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.04e-6_r8
+                     tmpfsoa      = mfsoa2
+                     tmpfso4      = mfso42
+                     tmpfncl      = mfncl2
+                     tmpfdst      = 0._r8
+                     tmpfpom      = 0._r8
+                     tmpfbcx      = 0._r8
+                     tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
+                                    tmpfncl - tmpfdst - tmpfpom - tmpfbcx
+                  else if (n == 3) then
+                     dgncur_a(i,k,n) = dgnum_amode(n)  ! 2.00e-6_r8
+                     tmpfsoa      = mfsoa3
+                     tmpfso4      = mfso43
+                     tmpfncl      = mfncl3
+                     tmpfdst      = mfdst3
+                     tmpfpom      = mfpom3
+                     tmpfbcx      = mfbc3
+                     tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
+                                    tmpfncl - tmpfdst - tmpfpom - tmpfbcx
+                  else if (n == 4) then
+                     dgncur_a(i,k,n) = dgnum_amode(n)  ! 0.08e-6_r8
+                     tmpfsoa      = 0._r8
+                     tmpfso4      = 0._r8
+                     tmpfncl      = 0._r8
+                     tmpfdst      = 0._r8
+                     tmpfpom      = mfpom4
+                     tmpfbcx      = mfbc4
+                     tmpfmom      = 1._r8 - tmpfsoa - tmpfso4 - &
+                                    tmpfncl - tmpfdst - tmpfpom - tmpfbcx
+                  end if
+                  ! q(i,k,numptr_amode(n)) = #/kg-air
+                  if (n == modeptr_aitken) then
+                     q(i,k,numptr_amode(n)) = numc2 / aircon(i,k) / mwdry
+                     l_num_a2 = numptr_amode(n)
+                     l_so4_a2 = lptr_so4_a_amode(n)
+                  else if (n == modeptr_accum) then
+                     q(i,k,numptr_amode(n)) = numc1 / aircon(i,k) / mwdry
+                     l_num_a1 = numptr_amode(n)
+                     l_so4_a1 = lptr_so4_a_amode(n)
+                  else if (n == modeptr_pcarbon) then
+                     q(i,k,numptr_amode(n)) = numc4 / aircon(i,k) / mwdry
+                  else
+                     q(i,k,numptr_amode(n)) = numc3 / aircon(i,k) / mwdry
+                  end if
       
-                ! tmpvol: m3-dry-aerosol/kg-air
-                tmpvol  = q(i,k,numptr_amode(n)) * &
-                          (dgncur_a(i,k,n)**3) * &
-                          (pi/6.0_r8) * exp(4.5_r8*sx*sx)
-                tmpdens = 1.0_r8 /                           &
-                          ( (tmpfsoa / dens_aer(iaer_soa)) + &
-                            (tmpfso4 / dens_aer(iaer_so4)) + &
-                            (tmpfbcx / dens_aer(iaer_bc )) + &
-                            (tmpfpom / dens_aer(iaer_pom)) + &
-                            (tmpfncl / dens_aer(iaer_ncl)) + &
-                            (tmpfdst / dens_aer(iaer_dst)) + &
-                            (tmpfmom / dens_aer(iaer_mom))   )
-                tmpmass = tmpvol*tmpdens   ! kg-dry-aerosol/kg-air
+                  ! tmpvol: m3-dry-aerosol/kg-air
+                  tmpvol  = q(i,k,numptr_amode(n)) * &
+                           (dgncur_a(i,k,n)**3) * &
+                           (pi/6.0_r8) * exp(4.5_r8*sx*sx)
+                  tmpdens = 1.0_r8 /                           &
+                           ( (tmpfsoa / dens_aer(iaer_soa)) + &
+                              (tmpfso4 / dens_aer(iaer_so4)) + &
+                              (tmpfbcx / dens_aer(iaer_bc )) + &
+                              (tmpfpom / dens_aer(iaer_pom)) + &
+                              (tmpfncl / dens_aer(iaer_ncl)) + &
+                              (tmpfdst / dens_aer(iaer_dst)) + &
+                              (tmpfmom / dens_aer(iaer_mom))   )
+                  tmpmass = tmpvol*tmpdens   ! kg-dry-aerosol/kg-air
 
-                l_so4a = lptr_so4_a_amode(n)
-                l_nh4a = -1
-                l_soaa = lptr_soa_a_amode(n)
-                l_poma = lptr_pom_a_amode(n)
-                if (npoa == 2) l_poma = lptr_poma_a_amode(n)
-                l_bcxa = lptr_bc_a_amode(n)
-                if (nbc  == 2) l_bcxa = lptr_bca_a_amode(n)
-                l_ncla = lptr_nacl_a_amode(n)
-                l_dsta = lptr_dust_a_amode(n)
-                l_moma = lptr_mom_a_amode(n)
+                  l_so4a = lptr_so4_a_amode(n)
+                  l_nh4a = -1
+                  l_soaa = lptr_soa_a_amode(n)
+                  l_poma = lptr_pom_a_amode(n)
+                  if (npoa == 2) l_poma = lptr_poma_a_amode(n)
+                  l_bcxa = lptr_bc_a_amode(n)
+                  if (nbc  == 2) l_bcxa = lptr_bca_a_amode(n)
+                  l_ncla = lptr_nacl_a_amode(n)
+                  l_dsta = lptr_dust_a_amode(n)
+                  l_moma = lptr_mom_a_amode(n)
 #if ( defined MOSAIC_SPECIES )
-                l_no3a = lptr_no3_a_amode(n)
-                l_clxa = lptr_cl_a_amode(n)
-                l_caxa = lptr_ca_a_amode(n)
-                l_co3a = lptr_co3_a_amode(n)
+                  l_no3a = lptr_no3_a_amode(n)
+                  l_clxa = lptr_cl_a_amode(n)
+                  l_caxa = lptr_ca_a_amode(n)
+                  l_co3a = lptr_co3_a_amode(n)
 #else
-                l_no3a = -1
-                l_clxa = -1
-                l_caxa = -1
-                l_co3a = -1
+                  l_no3a = -1
+                  l_clxa = -1
+                  l_caxa = -1
+                  l_co3a = -1
 #endif
-                ! q array return kg-aer/kg-air
-                if (l_so4a > 0) q(i,k,l_so4a) = tmpmass*tmpfso4
-                if (l_nh4a > 0) q(i,k,l_nh4a) = tmpmass*tmpfnh4
-                if (l_soaa > 0) q(i,k,l_soaa) = tmpmass*tmpfsoa
-                if (l_poma > 0) q(i,k,l_poma) = tmpmass*tmpfpom
-                if (l_bcxa > 0) q(i,k,l_bcxa) = tmpmass*tmpfbcx
-                if (l_dsta > 0) q(i,k,l_dsta) = tmpmass*tmpfdst
-                if (l_ncla > 0) q(i,k,l_ncla) = tmpmass*tmpfncl
-                if (l_moma > 0) q(i,k,l_moma) = tmpmass*tmpfmom
-                if (l_no3a > 0) q(i,k,l_no3a) = tmpmass*tmpfno3
-                if (l_clxa > 0) q(i,k,l_clxa) = tmpmass*tmpfclx
-                if (l_caxa > 0) q(i,k,l_caxa) = tmpmass*tmpfcax
-                if (l_co3a > 0) q(i,k,l_co3a) = tmpmass*tmpfco3
+                  ! q array return kg-aer/kg-air
+                  if (l_so4a > 0) q(i,k,l_so4a) = tmpmass*tmpfso4
+                  if (l_nh4a > 0) q(i,k,l_nh4a) = tmpmass*tmpfnh4
+                  if (l_soaa > 0) q(i,k,l_soaa) = tmpmass*tmpfsoa
+                  if (l_poma > 0) q(i,k,l_poma) = tmpmass*tmpfpom
+                  if (l_bcxa > 0) q(i,k,l_bcxa) = tmpmass*tmpfbcx
+                  if (l_dsta > 0) q(i,k,l_dsta) = tmpmass*tmpfdst
+                  if (l_ncla > 0) q(i,k,l_ncla) = tmpmass*tmpfncl
+                  if (l_moma > 0) q(i,k,l_moma) = tmpmass*tmpfmom
+                  if (l_no3a > 0) q(i,k,l_no3a) = tmpmass*tmpfno3
+                  if (l_clxa > 0) q(i,k,l_clxa) = tmpmass*tmpfclx
+                  if (l_caxa > 0) q(i,k,l_caxa) = tmpmass*tmpfcax
+                  if (l_co3a > 0) q(i,k,l_co3a) = tmpmass*tmpfco3
 
             end do ! n
          end do ! i
@@ -784,7 +784,7 @@
       use modal_aero_data
       use modal_aero_calcsize, only: modal_aero_calcsize_sub
       use modal_aero_amicphys, only: modal_aero_amicphys_intr, &
-          gaexch_h2so4_uptake_optaa, newnuc_h2so4_conc_optaa, mosaic
+            gaexch_h2so4_uptake_optaa, newnuc_h2so4_conc_optaa, mosaic
       use modal_aero_wateruptake, only: modal_aero_wateruptake_dr
       use gaschem_simple, only: gaschem_simple_sub
       use cloudchem_simple, only: cloudchem_simple_sub
@@ -828,7 +828,7 @@
       integer :: l_num_a1, l_nh4_a1, l_so4_a1
       integer :: l_num_a2, l_nh4_a2, l_so4_a2
       integer :: lmz_h2so4g, lmz_nh3g, lmz_so2g, &
-                 lmz_hno3g, lmz_hclg, lmz_soag
+                  lmz_hno3g, lmz_hclg, lmz_soag
       integer :: lmz_num_a1, lmz_nh4_a1, lmz_so4_a1
       integer :: lmz_num_a2, lmz_nh4_a2, lmz_so4_a2
       integer :: lchnk, loffset, lun
@@ -894,26 +894,26 @@
       integer :: dimids(2), varid(23)
       character (8) :: date
       real(r8), dimension(nstop,ntot_amode) :: tmp_dgn_a, &
-                               tmp_dgn_awet, tmp_num_aer, &
-                               tmp_so4_aer, tmp_soa_aer
+                                 tmp_dgn_awet, tmp_num_aer, &
+                                 tmp_so4_aer, tmp_soa_aer
       real(r8), dimension(nstop)            :: tmp_h2so4, &
-                                               tmp_soag
+                                                tmp_soag
       real(r8), dimension(nstop,ntot_amode) :: qtend_cond_aging_so4, &
-                                               qtend_cond_aging_soa, &
-                                               qtend_rename_so4, &
-                                               qtend_rename_soa, &
-                                               qtend_newnuc_so4, &
-                                               qtend_newnuc_soa, &
-                                               qtend_coag_so4, &
-                                               qtend_coag_soa
+                                                qtend_cond_aging_soa, &
+                                                qtend_rename_so4, &
+                                                qtend_rename_soa, &
+                                                qtend_newnuc_so4, &
+                                                qtend_newnuc_soa, &
+                                                qtend_coag_so4, &
+                                                qtend_coag_soa
       real(r8), dimension(nstop)            :: qtend_cond_aging_h2so4, &
-                                               qtend_cond_aging_soag,  &
-                                               qtend_rename_h2so4,     &
-                                               qtend_rename_soag,      &
-                                               qtend_newnuc_h2so4,     &
-                                               qtend_newnuc_soag,      &
-                                               qtend_coag_h2so4,       &
-                                               qtend_coag_soag
+                                                qtend_cond_aging_soag,  &
+                                                qtend_rename_h2so4,     &
+                                                qtend_rename_soag,      &
+                                                qtend_newnuc_h2so4,     &
+                                                qtend_newnuc_soag,      &
+                                                qtend_coag_h2so4,       &
+                                                qtend_coag_soag
 
 !
 ! output comparison results
@@ -1039,10 +1039,10 @@
 
       ! Add global attribute
       call check( nf90_put_att(ncid, NF90_GLOBAL, &
-                               "Created_by", "PNNL") )
+                                 "Created_by", "PNNL") )
       call date_and_time(date)
       call check( nf90_put_att(ncid, NF90_GLOBAL, &
-                               "Created_date", date) )
+                                 "Created_date", date) )
 
       ! End define mode. This tells netCDF we are done defining
       ! metadata.
@@ -1372,21 +1372,21 @@ main_time_loop: &
          tmp_num_aer(nstep,i)              = q(1,1,numptr_amode(i))
          l                                 = lptr_so4_a_amode(i)
          if  (l .gt. 0) then 
-             tmp_so4_aer(nstep,i)          = q(1,1,l)
-             l2                            = l - loffset
-             qtend_cond_aging_so4(nstep,i) = dvmrdt_cond(1,1,l2)
-             qtend_rename_so4(nstep,i)     = dvmrdt_rnam(1,1,l2)
-             qtend_newnuc_so4(nstep,i)     = dvmrdt_nnuc(1,1,l2)
-             qtend_coag_so4(nstep,i)       = dvmrdt_coag(1,1,l2)
+               tmp_so4_aer(nstep,i)          = q(1,1,l)
+               l2                            = l - loffset
+               qtend_cond_aging_so4(nstep,i) = dvmrdt_cond(1,1,l2)
+               qtend_rename_so4(nstep,i)     = dvmrdt_rnam(1,1,l2)
+               qtend_newnuc_so4(nstep,i)     = dvmrdt_nnuc(1,1,l2)
+               qtend_coag_so4(nstep,i)       = dvmrdt_coag(1,1,l2)
          end if
          l                                 = lptr_soa_a_amode(i)
          if  (l .gt. 0) then 
-             tmp_soa_aer(nstep,i)          = q(1,1,l)
-             l2                            = l - loffset
-             qtend_cond_aging_soa(nstep,i) = dvmrdt_cond(1,1,l2)
-             qtend_rename_soa(nstep,i)     = dvmrdt_rnam(1,1,l2)
-             qtend_newnuc_soa(nstep,i)     = dvmrdt_nnuc(1,1,l2)
-             qtend_coag_soa(nstep,i)       = dvmrdt_coag(1,1,l2)
+               tmp_soa_aer(nstep,i)          = q(1,1,l)
+               l2                            = l - loffset
+               qtend_cond_aging_soa(nstep,i) = dvmrdt_cond(1,1,l2)
+               qtend_rename_soa(nstep,i)     = dvmrdt_rnam(1,1,l2)
+               qtend_newnuc_soa(nstep,i)     = dvmrdt_nnuc(1,1,l2)
+               qtend_coag_soa(nstep,i)       = dvmrdt_coag(1,1,l2)
          end if
       end do
       tmp_h2so4(nstep)                     = q(1,1,l_h2so4g)
